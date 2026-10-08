@@ -1,0 +1,11 @@
+<h2>Iniciar sesión</h2>
+
+<%= form_with url: login_path do %>
+  <div>
+    <%= text_field_tag :username, nil, placeholder: "Usuario", required: true %>
+  </div>
+  <div>
+    <%= password_field_tag :password, nil, placeholder: "Contraseña", required: true %>
+  </div>
+  <%= submit_tag "Entrar" %>
+<% end %>
