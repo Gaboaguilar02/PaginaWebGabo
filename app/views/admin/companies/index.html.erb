@@ -1,0 +1,52 @@
+<% content_for :title, "Empresas" %>
+
+<div class="page-header">
+  <div>
+    <h1>Empresas</h1>
+    <p class="muted">Empresas de servicio técnico asociadas a la plataforma.</p>
+  </div>
+  <%= link_to "+ Nueva empresa", new_admin_company_path, class: "btn btn--primary" %>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Empresa</th>
+        <th>RUC</th>
+        <th>Ubicación</th>
+        <th>Repara</th>
+        <th>Estado</th>
+        <th class="actions-col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @companies.each do |empresa| %>
+        <tr>
+          <td><%= link_to empresa.nombre, admin_company_path(empresa) %></td>
+          <td><%= empresa.ruc %></td>
+          <td><%= empresa.city.nombre %>, <%= empresa.city.province.nombre %></td>
+          <td><%= empresa.appliance_types.map(&:nombre).sort.to_sentence.presence || "—" %></td>
+          <td><%= badge_estado_empresa(empresa) %></td>
+          <td class="actions">
+            <% unless empresa.status == "activa" %>
+              <% texto_activar = empresa.status == "pendiente" ? "Aprobar" : "Reactivar" %>
+              <%= button_to texto_activar, cambiar_estado_admin_company_path(empresa),
+                            method: :patch, params: { status: "activa" }, class: "btn btn--sm" %>
+            <% end %>
+            <% unless empresa.status == "suspendida" %>
+              <%= button_to "Suspender", cambiar_estado_admin_company_path(empresa),
+                            method: :patch, params: { status: "suspendida" }, class: "btn btn--sm" %>
+            <% end %>
+            <%= link_to "Editar", edit_admin_company_path(empresa), class: "btn btn--sm" %>
+            <%= button_to "Eliminar", admin_company_path(empresa), method: :delete, class: "btn btn--danger btn--sm",
+                          form: { data: { turbo_confirm: "¿Eliminar la empresa #{empresa.nombre}?" } } %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @companies.empty? %>
+        <tr><td colspan="6" class="muted">No hay empresas registradas.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,54 @@
+<% content_for :title, "Usuarios" %>
+
+<div class="page-header">
+  <div>
+    <h1>Usuarios</h1>
+    <p class="muted">Administradores, empresas, técnicos y clientes de la plataforma.</p>
+  </div>
+  <%= link_to "+ Nuevo usuario", new_admin_user_path, class: "btn btn--primary" %>
+</div>
+
+<div class="tabs">
+  <%= link_to "Todos", admin_users_path, class: [ "tabs__item", ("is-active" if @role.nil?) ] %>
+  <% User::ROLE_LABELS.each do |valor, texto| %>
+    <%= link_to texto, admin_users_path(role: valor), class: [ "tabs__item", ("is-active" if @role == valor) ] %>
+  <% end %>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Nombre</th>
+        <th>Cédula</th>
+        <th>Rol</th>
+        <th>Empresa</th>
+        <th>Estado</th>
+        <th class="actions-col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @users.each do |usuario| %>
+        <tr>
+          <td><%= usuario.username %></td>
+          <td><%= usuario.nombre_completo %></td>
+          <td><%= usuario.cedula %></td>
+          <td><%= badge_rol(usuario) %></td>
+          <td><%= usuario.company&.nombre || "—" %></td>
+          <td><%= usuario.activo? ? badge("Activo", :ok) : badge("Inactivo", :danger) %></td>
+          <td class="actions">
+            <%= link_to "Editar", edit_admin_user_path(usuario), class: "btn btn--sm" %>
+            <% unless usuario == current_user %>
+              <%= button_to "Eliminar", admin_user_path(usuario), method: :delete, class: "btn btn--danger btn--sm",
+                            form: { data: { turbo_confirm: "¿Eliminar al usuario #{usuario.username}?" } } %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @users.empty? %>
+        <tr><td colspan="7" class="muted">No hay usuarios con este filtro.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

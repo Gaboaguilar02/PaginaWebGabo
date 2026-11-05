@@ -1,0 +1,13 @@
+<%= form_with model: [ :admin, province ], class: "form card" do |f| %>
+  <%= render "shared/errores", record: province %>
+
+  <div class="field">
+    <%= f.label :nombre, "Nombre de la provincia" %>
+    <%= f.text_field :nombre, required: true, maxlength: 80 %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Guardar", class: "btn btn--primary" %>
+    <%= link_to "Cancelar", admin_provinces_path, class: "btn" %>
+  </div>
+<% end %>

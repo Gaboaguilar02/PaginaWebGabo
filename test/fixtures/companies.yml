@@ -1,0 +1,20 @@
+tecnifrio:
+  nombre: TecniFrío S.A.
+  ruc: "1790001237001"
+  descripcion: Reparación de línea blanca
+  telefono: "022345678"
+  direccion: Av. Amazonas
+  city: quito
+  status: activa
+
+hogarfix:
+  nombre: HogarFix Cía. Ltda.
+  ruc: "0990000018001"
+  city: guayaquil
+  status: pendiente
+
+sin_usuarios:
+  nombre: Servicio Austral
+  ruc: "1710034065001"
+  city: cuenca
+  status: pendiente

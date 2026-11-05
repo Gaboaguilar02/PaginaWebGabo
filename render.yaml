@@ -1,0 +1,25 @@
+# Blueprint de Render (https://render.com). Usa el Dockerfile del proyecto.
+services:
+  - type: web
+    name: paginawebgabo
+    runtime: docker
+    plan: free
+    healthCheckPath: /up
+    # Sin Thruster: Puma escucha directamente el puerto PORT que asigna Render.
+    # El entrypoint del Dockerfile ejecuta db:prepare (crea la base y carga los seeds).
+    dockerCommand: ./bin/rails server
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: BINDING
+        value: 0.0.0.0
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+      - key: RAILS_SERVE_STATIC_FILES
+        value: "true"
+      - key: ADMIN_PASSWORD
+        sync: false   # lo escribes tú en el panel de Render
+      - key: DEMO_PASSWORD
+        sync: false

@@ -1,0 +1,17 @@
+<%= form_with model: [ :admin, appliance_type ], class: "form card" do |f| %>
+  <%= render "shared/errores", record: appliance_type %>
+
+  <div class="field">
+    <%= f.label :nombre, "Nombre" %>
+    <%= f.text_field :nombre, required: true, maxlength: 60 %>
+  </div>
+
+  <div class="field">
+    <label class="check"><%= f.check_box :activo %> Activo (las empresas pueden elegirlo)</label>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Guardar", class: "btn btn--primary" %>
+    <%= link_to "Cancelar", admin_appliance_types_path, class: "btn" %>
+  </div>
+<% end %>

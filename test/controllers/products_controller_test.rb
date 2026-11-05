@@ -3,6 +3,13 @@ require "test_helper"
 class ProductsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @product = products(:one)
+    login_as users(:cliente)
+  end
+
+  test "sin sesión redirige al login" do
+    delete logout_path
+    get products_url
+    assert_redirected_to login_url
   end
 
   test "should get index" do

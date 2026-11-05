@@ -1,9 +1,43 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+<% password_digest = BCrypt::Password.create("password123", cost: BCrypt::Engine::MIN_COST) %>
 
-one:
-  username: MyString
-  password_digest: MyString
+admin:
+  username: admin
+  nombre_completo: Administrador
+  cedula: "1700000019"
+  role: admin
+  activo: true
+  password_digest: <%= password_digest %>
 
-two:
-  username: MyString
-  password_digest: MyString
+empresa:
+  username: empresa1
+  nombre_completo: Marta Ruiz
+  cedula: "0900000076"
+  role: empresa
+  activo: true
+  company: tecnifrio
+  password_digest: <%= password_digest %>
+
+tecnico:
+  username: tecnico1
+  nombre_completo: Juan Pérez
+  cedula: "0100000025"
+  role: tecnico
+  activo: true
+  company: tecnifrio
+  password_digest: <%= password_digest %>
+
+cliente:
+  username: cliente1
+  nombre_completo: Ana Torres
+  cedula: "1712345675"
+  role: cliente
+  activo: true
+  password_digest: <%= password_digest %>
+
+inactivo:
+  username: inactivo1
+  nombre_completo: Pedro Inactivo
+  cedula: "1700000035"
+  role: cliente
+  activo: false
+  password_digest: <%= password_digest %>

@@ -1,0 +1,22 @@
+<header class="topbar">
+  <div class="topbar__inner">
+    <%= link_to "PaginaWebGabo", (current_user.admin? ? admin_root_path : root_path), class: "brand" %>
+
+    <nav class="topnav">
+      <% if current_user.admin? %>
+        <%= nav_link "Panel", admin_root_path %>
+        <%= nav_link "Empresas", admin_companies_path %>
+        <%= nav_link "Usuarios", admin_users_path %>
+        <%= nav_link "Electrodomésticos", admin_appliance_types_path %>
+        <%= nav_link "Provincias", admin_provinces_path %>
+        <%= nav_link "Ciudades", admin_cities_path %>
+      <% end %>
+      <%= nav_link "Productos", products_path %>
+    </nav>
+
+    <div class="topbar__user">
+      <span><%= current_user.nombre_completo.presence || current_user.username %> · <%= current_user.role_label %></span>
+      <%= button_to "Cerrar sesión", logout_path, method: :delete, class: "btn btn--light btn--sm" %>
+    </div>
+  </div>
+</header>

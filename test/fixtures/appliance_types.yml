@@ -1,0 +1,15 @@
+lavadora:
+  nombre: Lavadora
+  activo: true
+
+refrigerador:
+  nombre: Refrigerador
+  activo: true
+
+secadora:
+  nombre: Secadora
+  activo: true
+
+descontinuado:
+  nombre: Plancha vieja
+  activo: false

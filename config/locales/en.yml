@@ -1,31 +1,67 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
+# La aplicación está en español. Se usa el locale por defecto (:en) y aquí se
+# sobrescriben sus mensajes y nombres de atributos con textos en español.
 en:
-  hello: "Hello world"
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: "no puede estar vacío"
+      present: "debe estar vacío"
+      taken: "ya está registrado"
+      invalid: "no es válido"
+      inclusion: "no es una opción válida"
+      exclusion: "está reservado"
+      required: "debe existir"
+      too_long: "es demasiado largo (máximo %{count} caracteres)"
+      too_short: "es demasiado corto (mínimo %{count} caracteres)"
+      wrong_length: "debe tener %{count} caracteres"
+      confirmation: "no coincide con %{attribute}"
+      not_a_number: "no es un número"
+      password_too_long: "es demasiado larga"
+  activerecord:
+    errors:
+      messages:
+        required: "debe existir"
+        record_invalid: "La validación falló: %{errors}"
+        restrict_dependent_destroy:
+          has_one: "No se puede eliminar porque tiene %{record} asociado"
+          has_many: "No se puede eliminar porque tiene %{record} asociados"
+    models:
+      province: { one: "Provincia", other: "Provincias" }
+      city: { one: "Ciudad", other: "Ciudades" }
+      appliance_type: { one: "Electrodoméstico", other: "Electrodomésticos" }
+      company: { one: "Empresa", other: "Empresas" }
+      user: { one: "Usuario", other: "Usuarios" }
+    attributes:
+      province:
+        nombre: "Nombre"
+        cities: "ciudades"
+      city:
+        nombre: "Nombre"
+        province: "Provincia"
+        province_id: "Provincia"
+        companies: "empresas"
+      appliance_type:
+        nombre: "Nombre"
+        activo: "Activo"
+        company_appliance_types: "empresas asociadas"
+      company:
+        nombre: "Nombre"
+        ruc: "RUC"
+        descripcion: "Descripción"
+        telefono: "Teléfono"
+        direccion: "Dirección"
+        city: "Ciudad"
+        city_id: "Ciudad"
+        status: "Estado"
+        appliance_types: "Electrodomésticos"
+        users: "usuarios"
+      user:
+        username: "Usuario"
+        nombre_completo: "Nombre completo"
+        cedula: "Cédula"
+        role: "Rol"
+        company: "Empresa"
+        company_id: "Empresa"
+        activo: "Activo"
+        password: "Contraseña"
+        password_confirmation: "Confirmación de contraseña"

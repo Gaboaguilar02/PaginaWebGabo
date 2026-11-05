@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
     <title><%= content_for(:title) || "Pagina Web Gabo" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -25,14 +25,12 @@
 
   <body>
     <% if logged_in? %>
-  <p>
-    Hola, <%= current_user.username %>
-    <%= button_to "Cerrar sesión", logout_path, method: :delete %>
-  </p>
-<% end %>
+      <%= render "shared/navbar" %>
+    <% end %>
 
-<p style="color:green"><%= notice %></p>
-<p style="color:red"><%= alert %></p>
-    <%= yield %>
+    <main class="container">
+      <%= render "shared/flash" %>
+      <%= yield %>
+    </main>
   </body>
 </html>

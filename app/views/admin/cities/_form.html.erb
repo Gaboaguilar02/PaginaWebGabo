@@ -1,0 +1,19 @@
+<%= form_with model: [ :admin, city ], class: "form card" do |f| %>
+  <%= render "shared/errores", record: city %>
+
+  <%# La provincia (llave foránea) se elige de una lista; nunca se escribe su id a mano. %>
+  <div class="field">
+    <%= f.label :province_id, "Provincia" %>
+    <%= f.collection_select :province_id, @provinces, :id, :nombre, { prompt: "Seleccione una provincia" }, { required: true } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :nombre, "Nombre de la ciudad" %>
+    <%= f.text_field :nombre, required: true, maxlength: 80 %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Guardar", class: "btn btn--primary" %>
+    <%= link_to "Cancelar", admin_cities_path(province_id: city.province_id), class: "btn" %>
+  </div>
+<% end %>

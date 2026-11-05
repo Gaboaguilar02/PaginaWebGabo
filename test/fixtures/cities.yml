@@ -1,0 +1,11 @@
+quito:
+  province: pichincha
+  nombre: Quito
+
+guayaquil:
+  province: guayas
+  nombre: Guayaquil
+
+cuenca:
+  province: azuay
+  nombre: Cuenca

@@ -1,0 +1,7 @@
+tecnifrio_lavadora:
+  company: tecnifrio
+  appliance_type: lavadora
+
+tecnifrio_refrigerador:
+  company: tecnifrio
+  appliance_type: refrigerador

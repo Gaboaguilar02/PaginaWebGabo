@@ -1,0 +1,33 @@
+<% content_for :title, "Provincias" %>
+
+<div class="page-header">
+  <div>
+    <h1>Provincias</h1>
+    <p class="muted">Primer nivel de ubicación. Cada provincia agrupa sus ciudades.</p>
+  </div>
+  <%= link_to "+ Nueva provincia", new_admin_province_path, class: "btn btn--primary" %>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr><th>Provincia</th><th>Ciudades</th><th class="actions-col">Acciones</th></tr>
+    </thead>
+    <tbody>
+      <% @provinces.each do |provincia| %>
+        <tr>
+          <td><%= provincia.nombre %></td>
+          <td><%= link_to "#{provincia.cities.size} ciudades", admin_cities_path(province_id: provincia.id) %></td>
+          <td class="actions">
+            <%= link_to "Editar", edit_admin_province_path(provincia), class: "btn btn--sm" %>
+            <%= button_to "Eliminar", admin_province_path(provincia), method: :delete, class: "btn btn--danger btn--sm",
+                          form: { data: { turbo_confirm: "¿Eliminar la provincia #{provincia.nombre}?" } } %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @provinces.empty? %>
+        <tr><td colspan="3" class="muted">No hay provincias registradas.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

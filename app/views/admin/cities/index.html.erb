@@ -1,0 +1,39 @@
+<% content_for :title, "Ciudades" %>
+
+<div class="page-header">
+  <div>
+    <h1>Ciudades</h1>
+    <p class="muted">Segundo nivel de ubicación. Cada ciudad pertenece a una provincia.</p>
+  </div>
+  <%= link_to "+ Nueva ciudad", new_admin_city_path(province_id: @province_id), class: "btn btn--primary" %>
+</div>
+
+<%= form_with url: admin_cities_path, method: :get, class: "filter" do %>
+  <%= label_tag :province_id, "Filtrar por provincia" %>
+  <%= select_tag :province_id, options_from_collection_for_select(@provinces, :id, :nombre, @province_id),
+                 include_blank: "Todas", onchange: "this.form.requestSubmit()" %>
+<% end %>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr><th>Ciudad</th><th>Provincia</th><th class="actions-col">Acciones</th></tr>
+    </thead>
+    <tbody>
+      <% @cities.each do |ciudad| %>
+        <tr>
+          <td><%= ciudad.nombre %></td>
+          <td><%= ciudad.province.nombre %></td>
+          <td class="actions">
+            <%= link_to "Editar", edit_admin_city_path(ciudad), class: "btn btn--sm" %>
+            <%= button_to "Eliminar", admin_city_path(ciudad), method: :delete, class: "btn btn--danger btn--sm",
+                          form: { data: { turbo_confirm: "¿Eliminar la ciudad #{ciudad.nombre}?" } } %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @cities.empty? %>
+        <tr><td colspan="3" class="muted">No hay ciudades para este filtro.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

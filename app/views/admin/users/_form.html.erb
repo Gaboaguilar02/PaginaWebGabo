@@ -1,0 +1,53 @@
+<%= form_with model: [ :admin, user ], class: "form card" do |f| %>
+  <%= render "shared/errores", record: user %>
+
+  <div class="grid-2">
+    <div class="field">
+      <%= f.label :username, "Usuario" %>
+      <%= f.text_field :username, required: true, minlength: 3, maxlength: 30, autocomplete: "off" %>
+    </div>
+    <div class="field">
+      <%= f.label :nombre_completo, "Nombre completo" %>
+      <%= f.text_field :nombre_completo, required: true, maxlength: 100 %>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <%= f.label :cedula, "Cédula" %>
+      <%= f.text_field :cedula, required: true, maxlength: 10, inputmode: "numeric", pattern: "[0-9]{10}",
+                       title: "10 dígitos numéricos", placeholder: "1710034065" %>
+      <small class="hint">Dato sensible: el servidor valida la cédula (módulo 10) antes de guardar.</small>
+    </div>
+    <div class="field">
+      <%= f.label :role, "Rol" %>
+      <%= f.select :role, User::ROLE_LABELS.map { |valor, texto| [ texto, valor ] } %>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :company_id, "Empresa" %>
+    <%= f.collection_select :company_id, @companies, :id, :nombre, { include_blank: "— Sin empresa —" } %>
+    <small class="hint">Obligatoria para los roles Empresa y Técnico; debe quedar vacía para Administrador y Cliente.</small>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <%= f.label :password, user.new_record? ? "Contraseña" : "Nueva contraseña (opcional)" %>
+      <%= f.password_field :password, required: user.new_record?, minlength: 6, autocomplete: "new-password" %>
+    </div>
+    <div class="field">
+      <%= f.label :password_confirmation, "Confirmar contraseña" %>
+      <%= f.password_field :password_confirmation, required: user.new_record?, autocomplete: "new-password" %>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="check"><%= f.check_box :activo %> Usuario activo (puede iniciar sesión)</label>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Guardar usuario", class: "btn btn--primary" %>
+    <%= link_to "Cancelar", admin_users_path, class: "btn" %>
+  </div>
+<% end %>

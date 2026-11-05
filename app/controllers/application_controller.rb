@@ -7,8 +7,11 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # Un usuario desactivado pierde el acceso de inmediato, aunque tenga sesión abierta.
   def current_user
-    @current_user ||= User.find_by(id: session[:user_id]) if session[:user_id]
+    return @current_user if defined?(@current_user)
+
+    @current_user = session[:user_id] ? User.activos.find_by(id: session[:user_id]) : nil
   end
 
   def logged_in?

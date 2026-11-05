@@ -1,0 +1,61 @@
+<% content_for :title, @company.nombre %>
+
+<div class="page-header">
+  <div>
+    <h1><%= @company.nombre %> <%= badge_estado_empresa(@company) %></h1>
+    <p class="muted"><%= @company.descripcion.presence || "Sin descripción" %></p>
+  </div>
+  <div class="actions">
+    <%= link_to "Editar", edit_admin_company_path(@company), class: "btn btn--primary" %>
+    <%= link_to "Volver", admin_companies_path, class: "btn" %>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h2>Datos de la empresa</h2>
+    <dl class="details">
+      <dt>RUC</dt><dd><%= @company.ruc %></dd>
+      <dt>Teléfono</dt><dd><%= @company.telefono.presence || "—" %></dd>
+      <dt>Dirección</dt><dd><%= @company.direccion.presence || "—" %></dd>
+      <dt>Provincia</dt><dd><%= @company.city.province.nombre %></dd>
+      <dt>Ciudad</dt><dd><%= @company.city.nombre %></dd>
+      <dt>Reputación</dt><dd><%= number_with_precision(@company.rating_promedio, precision: 2) %> (<%= @company.reviews_count %> reseñas)</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Electrodomésticos que repara</h2>
+    <% if @company.appliance_types.any? %>
+      <ul class="chips">
+        <% @company.appliance_types.order(:nombre).each do |tipo| %>
+          <li><%= tipo.nombre %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="muted">Todavía no tiene electrodomésticos asignados.</p>
+    <% end %>
+  </div>
+</div>
+
+<div class="card card--flush">
+  <h2 class="card__title">Usuarios de la empresa</h2>
+  <table class="table">
+    <thead>
+      <tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Estado</th></tr>
+    </thead>
+    <tbody>
+      <% @tecnicos.each do |usuario| %>
+        <tr>
+          <td><%= link_to usuario.username, edit_admin_user_path(usuario) %></td>
+          <td><%= usuario.nombre_completo %></td>
+          <td><%= badge_rol(usuario) %></td>
+          <td><%= usuario.activo? ? badge("Activo", :ok) : badge("Inactivo", :danger) %></td>
+        </tr>
+      <% end %>
+      <% if @tecnicos.empty? %>
+        <tr><td colspan="4" class="muted">Aún no hay usuarios asignados a esta empresa.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

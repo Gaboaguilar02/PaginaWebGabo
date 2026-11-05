@@ -1,0 +1,33 @@
+<% content_for :title, "Electrodomésticos" %>
+
+<div class="page-header">
+  <div>
+    <h1>Catálogo de electrodomésticos</h1>
+    <p class="muted">Tipos de equipos de línea blanca que las empresas pueden reparar.</p>
+  </div>
+  <%= link_to "+ Nuevo electrodoméstico", new_admin_appliance_type_path, class: "btn btn--primary" %>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr><th>Nombre</th><th>Estado</th><th class="actions-col">Acciones</th></tr>
+    </thead>
+    <tbody>
+      <% @appliance_types.each do |tipo| %>
+        <tr>
+          <td><%= tipo.nombre %></td>
+          <td><%= tipo.activo? ? badge("Activo", :ok) : badge("Inactivo", :neutral) %></td>
+          <td class="actions">
+            <%= link_to "Editar", edit_admin_appliance_type_path(tipo), class: "btn btn--sm" %>
+            <%= button_to "Eliminar", admin_appliance_type_path(tipo), method: :delete, class: "btn btn--danger btn--sm",
+                          form: { data: { turbo_confirm: "¿Eliminar #{tipo.nombre}?" } } %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @appliance_types.empty? %>
+        <tr><td colspan="3" class="muted">El catálogo está vacío.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

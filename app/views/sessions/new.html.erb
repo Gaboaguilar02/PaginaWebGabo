@@ -1,11 +1,17 @@
-<h2>Iniciar sesión</h2>
+<div class="login">
+  <div class="card">
+    <h1>Iniciar sesión</h1>
 
-<%= form_with url: login_path do %>
-  <div>
-    <%= text_field_tag :username, nil, placeholder: "Usuario", required: true %>
+    <%= form_with url: login_path, class: "form" do %>
+      <div class="field">
+        <%= label_tag :username, "Usuario" %>
+        <%= text_field_tag :username, params[:username], placeholder: "Usuario", required: true, autofocus: true, autocomplete: "username" %>
+      </div>
+      <div class="field">
+        <%= label_tag :password, "Contraseña" %>
+        <%= password_field_tag :password, nil, placeholder: "Contraseña", required: true, autocomplete: "current-password" %>
+      </div>
+      <%= submit_tag "Entrar", class: "btn btn--primary btn--block" %>
+    <% end %>
   </div>
-  <div>
-    <%= password_field_tag :password, nil, placeholder: "Contraseña", required: true %>
-  </div>
-  <%= submit_tag "Entrar" %>
-<% end %>
+</div>

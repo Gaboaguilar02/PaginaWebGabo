@@ -1,0 +1,73 @@
+<%= form_with model: [ :admin, company ], class: "form card" do |f| %>
+  <%= render "shared/errores", record: company %>
+
+  <div class="grid-2">
+    <div class="field">
+      <%= f.label :nombre, "Nombre de la empresa" %>
+      <%= f.text_field :nombre, required: true, maxlength: 100 %>
+    </div>
+
+    <div class="field">
+      <%= f.label :ruc, "RUC" %>
+      <%= f.text_field :ruc, required: true, maxlength: 13, inputmode: "numeric", pattern: "[0-9]{13}",
+                       title: "13 dígitos numéricos", placeholder: "1790001237001" %>
+      <small class="hint">Dato sensible: el servidor valida el RUC (módulo 11) antes de guardar.</small>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :descripcion, "Descripción" %>
+    <%= f.text_area :descripcion, rows: 3, maxlength: 1000 %>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <%= f.label :telefono, "Teléfono" %>
+      <%= f.text_field :telefono, maxlength: 20, inputmode: "tel" %>
+    </div>
+    <div class="field">
+      <%= f.label :direccion, "Dirección" %>
+      <%= f.text_field :direccion, maxlength: 150 %>
+    </div>
+  </div>
+
+  <%# Dropdown dependiente: la provincia filtra las ciudades. La ciudad (llave foránea) nunca se escribe a mano. %>
+  <div class="grid-2"
+       data-controller="dependent-select"
+       data-dependent-select-url-value="<%= admin_lookups_cities_path %>"
+       data-dependent-select-query-key-value="province_id">
+    <div class="field">
+      <%= label_tag :province_id, "Provincia" %>
+      <%= select_tag :province_id,
+                     options_from_collection_for_select(@provinces, :id, :nombre, @selected_province_id),
+                     prompt: "Seleccione una provincia",
+                     data: { dependent_select_target: "parent", action: "change->dependent-select#change" } %>
+    </div>
+
+    <div class="field">
+      <%= f.label :city_id, "Ciudad" %>
+      <%= f.collection_select :city_id, @cities, :id, :nombre,
+                              { prompt: (@selected_province_id.present? ? "Seleccione una ciudad" : "Primero seleccione una provincia") },
+                              { required: true, disabled: @selected_province_id.blank?, data: { dependent_select_target: "child" } } %>
+    </div>
+  </div>
+
+  <div class="field">
+    <span class="label">Electrodomésticos que repara</span>
+    <div class="checks">
+      <%= f.collection_check_boxes :appliance_type_ids, @appliance_types, :id, :nombre do |b| %>
+        <label class="check"><%= b.check_box %> <%= b.text %></label>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :status, "Estado" %>
+    <%= f.select :status, Company::STATUS_LABELS.map { |valor, texto| [ texto, valor ] } %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Guardar empresa", class: "btn btn--primary" %>
+    <%= link_to "Cancelar", admin_companies_path, class: "btn" %>
+  </div>
+<% end %>

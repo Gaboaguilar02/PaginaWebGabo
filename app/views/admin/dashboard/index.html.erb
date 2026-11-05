@@ -1,0 +1,56 @@
+<% content_for :title, "Panel de administración" %>
+
+<div class="page-header">
+  <div>
+    <h1>Panel de administración</h1>
+    <p class="muted">Datos maestros que alimentan el core: empresas, técnicos, catálogo y ubicaciones.</p>
+  </div>
+  <%= link_to "+ Nueva empresa", new_admin_company_path, class: "btn btn--primary" %>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat__label">Empresas</span>
+    <span class="stat__value"><%= @total_empresas %></span>
+    <span class="stat__hint">
+      <%= Company::STATUSES.map { |estado| "#{@empresas_por_estado.fetch(estado, 0)} #{Company::STATUS_LABELS[estado].downcase}s" }.join(" · ") %>
+    </span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Técnicos</span>
+    <span class="stat__value"><%= @total_tecnicos %></span>
+    <span class="stat__hint"><%= link_to "Ver técnicos", admin_users_path(role: "tecnico") %></span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Clientes</span>
+    <span class="stat__value"><%= @total_clientes %></span>
+    <span class="stat__hint"><%= link_to "Ver clientes", admin_users_path(role: "cliente") %></span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Electrodomésticos activos</span>
+    <span class="stat__value"><%= @total_electrodomesticos %></span>
+    <span class="stat__hint"><%= link_to "Ver catálogo", admin_appliance_types_path %></span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Últimas empresas registradas</h2>
+  <% if @ultimas_empresas.any? %>
+    <table class="table">
+      <thead>
+        <tr><th>Empresa</th><th>Ubicación</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        <% @ultimas_empresas.each do |empresa| %>
+          <tr>
+            <td><%= link_to empresa.nombre, admin_company_path(empresa) %></td>
+            <td><%= empresa.city.nombre %>, <%= empresa.city.province.nombre %></td>
+            <td><%= badge_estado_empresa(empresa) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="muted">Aún no hay empresas registradas.</p>
+  <% end %>
+</div>
