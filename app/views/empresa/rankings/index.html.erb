@@ -46,8 +46,55 @@
 </div>
 
 <div class="card card--flush">
-  <h2 class="card__title">Participan en el ranking</h2>
-  <table class="table">
+  <h2 class="card__title">Ranking general · todos los técnicos</h2>
+  <p class="card__sub">Todos los técnicos de la empresa ordenados por casos resueltos y calificación, cumplan o no los requisitos del bono.</p>
+  <table class="table" id="ranking-general">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Técnico</th>
+        <th>Estado</th>
+        <th class="bar-col">Casos resueltos</th>
+        <th>Calificación</th>
+        <th>¿Aplica al bono?</th>
+        <th>Escalón</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @maximo = [ @ranking.filas.map(&:resueltos).max.to_i, 1 ].max %>
+      <% @ranking.ranking_general.each do |fila| %>
+        <tr>
+          <td><%= posicion(fila.posicion_general) %></td>
+          <td><%= fila.technician.nombre_completo %></td>
+          <td><%= fila.technician.activo? ? badge("Activo", :ok) : badge("Inactivo", :danger) %></td>
+          <td class="bar-col">
+            <div class="bar"><span class="bar__fill" style="width: <%= (fila.resueltos * 100.0 / @maximo).round %>%"></span></div>
+            <strong><%= fila.resueltos %></strong>
+          </td>
+          <td>
+            <% if fila.promedio %><%= estrellas(fila.promedio.round) %> <%= nota(fila.promedio) %> <span class="hint">(<%= fila.calificados %>)</span><% else %>—<% end %>
+          </td>
+          <td>
+            <% if fila.participa? %>
+              <%= badge("Sí", :ok) %> <span class="hint">puesto #<%= fila.posicion %> del bono</span>
+            <% else %>
+              <%= badge("No aplica", :warn) %>
+            <% end %>
+          </td>
+          <td><%= fila.tier ? "#{badge(fila.tier.nombre, :ok)} <span class='hint'>#{porcentaje(fila.tier.porcentaje)}</span>".html_safe : "—" %></td>
+        </tr>
+      <% end %>
+      <% if @ranking.ranking_general.empty? %>
+        <tr><td colspan="7" class="muted">Tu empresa aún no tiene técnicos. El administrador puede crearlos desde Usuarios.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="card card--flush">
+  <h2 class="card__title">Aplican al bono · ranking de participantes</h2>
+  <p class="card__sub">Cumplen los dos requisitos del mes: calificación ≥ <%= nota(@company.min_calificacion) %> y ≥ <%= @company.min_casos_participar %> casos resueltos.</p>
+  <table class="table" id="ranking-bono">
     <thead>
       <tr>
         <th>#</th>
@@ -60,7 +107,6 @@
       </tr>
     </thead>
     <tbody>
-      <% @maximo = [ @ranking.filas.map(&:resueltos).max.to_i, 1 ].max %>
       <% @ranking.participantes.each do |fila| %>
         <tr>
           <td><%= posicion(fila.posicion) %></td>
@@ -105,23 +151,41 @@
   </table>
 </div>
 
-<% if @ranking.no_participantes.any? %>
-  <div class="card card--flush">
-    <h2 class="card__title">No participan este mes</h2>
-    <table class="table">
-      <thead><tr><th>Técnico</th><th>Casos resueltos</th><th>Calificación</th><th>Por qué no participa</th></tr></thead>
-      <tbody>
-        <% @ranking.no_participantes.each do |fila| %>
-          <tr>
-            <td><%= fila.technician.nombre_completo %> <% unless fila.technician.activo? %><%= badge("Inactivo", :danger) %><% end %></td>
-            <td><%= fila.resueltos %></td>
-            <td><%= nota(fila.promedio) %></td>
-            <td><% fila.motivos.each do |motivo| %><%= badge(motivo.capitalize, :warn) %> <% end %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
-<% end %>
+<div class="card card--flush">
+  <h2 class="card__title">No aplican al bono este mes</h2>
+  <p class="card__sub">Técnicos que no cumplen uno o los dos requisitos. Se muestra cada parámetro frente a lo exigido.</p>
+  <table class="table" id="no-participan">
+    <thead>
+      <tr>
+        <th>Técnico</th>
+        <th>Casos resueltos <span class="hint">(mínimo <%= @company.min_casos_participar %>)</span></th>
+        <th>Calificación <span class="hint">(mínima <%= nota(@company.min_calificacion) %>)</span></th>
+        <th>Qué le falta</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @ranking.no_participantes.each do |fila| %>
+        <% casos_ok = fila.resueltos >= @company.min_casos_participar %>
+        <% nota_ok = fila.promedio && fila.promedio >= @company.min_calificacion %>
+        <tr>
+          <td><%= fila.technician.nombre_completo %> <% unless fila.technician.activo? %><%= badge("Inactivo", :danger) %><% end %></td>
+          <td>
+            <span class="chk <%= casos_ok ? "chk--ok" : "chk--no" %>"><%= casos_ok ? "✓" : "✗" %></span>
+            <strong><%= fila.resueltos %></strong> / <%= @company.min_casos_participar %>
+          </td>
+          <td>
+            <span class="chk <%= nota_ok ? "chk--ok" : "chk--no" %>"><%= nota_ok ? "✓" : "✗" %></span>
+            <strong><%= nota(fila.promedio) %></strong> / <%= nota(@company.min_calificacion) %>
+            <% if fila.calificados.positive? %><span class="hint">(<%= pluralize(fila.calificados, "calificación", "calificaciones") %>)</span><% end %>
+          </td>
+          <td><% fila.motivos.each do |motivo| %><%= badge(motivo.capitalize, :warn) %> <% end %></td>
+        </tr>
+      <% end %>
+      <% if @ranking.no_participantes.empty? %>
+        <tr><td colspan="4" class="muted">Todos los técnicos cumplen los requisitos este mes. 🎉</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
 
 <p class="hint">El pago solo se <strong>registra</strong> como constancia (por casos resueltos): UFix no mueve dinero. Cada técnico tiene a lo sumo un pago por mes. La calificación se calcula con los casos del mes que sí fueron calificados.</p>

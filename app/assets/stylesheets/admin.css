@@ -213,3 +213,9 @@ td .hint { white-space: nowrap; }
 .requisito.is-ok .requisito__icon { color: var(--ok); }
 .requisito.is-pending .requisito__icon { color: var(--warn); }
 .bono-line { margin: .5rem 0; }
+
+/* Tablas del ranking: subtítulos y marcas de cumplimiento */
+.card__sub { margin: .15rem 1.25rem .75rem; color: var(--muted); font-size: .85rem; }
+.chk { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; font-size: .75rem; font-weight: 800; margin-right: .3rem; }
+.chk--ok { background: #e6f4ea; color: var(--ok); }
+.chk--no { background: #fdecea; color: var(--danger); }

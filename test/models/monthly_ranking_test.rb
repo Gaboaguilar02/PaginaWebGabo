@@ -125,6 +125,26 @@ class MonthlyRankingTest < ActiveSupport::TestCase
     assert_nil r.fila_de(@juan).posicion
   end
 
+  test "el ranking general incluye a todos y tiene posiciones propias, distintas a las del bono" do
+    resolver_casos(@juan, mes_anterior, 8, calificacion: 5)   # aplica
+    resolver_casos(@carlos, mes_anterior, 20, calificacion: 3) # no aplica por nota, pero resolvió más
+
+    r = ranking(mes_anterior)
+    assert_equal [ @carlos, @juan ], r.ranking_general.map(&:technician)
+    assert_equal [ 1, 2 ], r.ranking_general.map(&:posicion_general)
+
+    # En el ranking del bono solo está Juan, y es el primero
+    assert_equal [ @juan ], r.participantes.map(&:technician)
+    assert_equal 1, r.fila_de(@juan).posicion
+    assert_nil r.fila_de(@carlos).posicion
+  end
+
+  test "en el ranking general también comparten posición los empatados" do
+    resolver_casos(@juan, mes_anterior, 3, calificacion: 5)
+    resolver_casos(@carlos, mes_anterior, 3, calificacion: 5)
+    assert_equal [ 1, 1 ], ranking(mes_anterior).ranking_general.map(&:posicion_general)
+  end
+
   test "cada empresa usa sus propios requisitos" do
     resolver_casos(@juan, mes_anterior, 5, calificacion: 4)
     @empresa.update!(min_calificacion: 4.5)

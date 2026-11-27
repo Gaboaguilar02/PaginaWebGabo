@@ -35,6 +35,16 @@ Solo entre quienes participan:
 2. Si empatan, mejor calificación promedio.
 3. Si empatan en ambos, comparten posición.
 
+La empresa ve tres tablas en su página de ranking:
+
+| Tabla | Quiénes aparecen | Posición |
+|---|---|---|
+| **Ranking general** | Todos los técnicos, apliquen o no al bono | Posición general (mismo orden, sin exigir requisitos) |
+| **Aplican al bono** | Solo quienes cumplen los dos requisitos | Posición del bono, con escalón, dinero y pago |
+| **No aplican al bono** | Quienes incumplen uno o ambos requisitos | Sin posición; se muestra cada parámetro frente a lo exigido (por ejemplo «24 / 20 casos ✓» y «3,88 / 4,20 nota ✗») |
+
+Un técnico puede ir primero en el ranking general (por ejemplo, el que más casos resolvió) y no aparecer en el del bono por su calificación.
+
 ## 4. Cuánto gana: escalones en porcentaje
 
 La empresa define sus **escalones** (nombre, casos mínimos al mes y **porcentaje del sueldo base** del técnico).

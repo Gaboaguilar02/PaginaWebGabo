@@ -5,11 +5,12 @@
 #    - calificación promedio >= company.min_calificacion (sobre los casos que sí fueron calificados), y
 #    - casos resueltos >= company.min_casos_participar.
 # 2. Entre quienes participan: más casos resueltos primero; si empatan, mejor calificación; si empatan en ambos, comparten posición.
-# 3. Quien no cumple aparece al final, sin posición ni bono, con el motivo.
+# 3. Quien no cumple aparece al final del ranking del bono, sin posición ni bono, con el motivo.
+#    Además existe un ranking general con todos los técnicos (mismo orden, sin exigir requisitos).
 # 4. Cada participante cobra solo el escalón más alto que alcanzó: porcentaje de su sueldo base (los bonos no se acumulan).
 # 5. Un caso cuenta en el mes en que se resolvió (resuelta_at), no en el que se pidió.
 class MonthlyRanking
-  Row = Struct.new(:posicion, :technician, :resueltos, :promedio, :calificados, :tier, :pago, :motivos, keyword_init: true) do
+  Row = Struct.new(:posicion, :posicion_general, :technician, :resueltos, :promedio, :calificados, :tier, :pago, :motivos, keyword_init: true) do
     def participa? = motivos.empty?
     def sueldo_base = technician.sueldo_base
     def tiene_sueldo? = sueldo_base.present?
@@ -40,6 +41,12 @@ class MonthlyRanking
 
   def filas
     @filas ||= construir
+  end
+
+  # Todos los técnicos de la empresa ordenados por casos y calificación (con posición general), apliquen o no al bono.
+  def ranking_general
+    filas # fuerza el cálculo
+    @ranking_general
   end
 
   def participantes
@@ -118,19 +125,28 @@ class MonthlyRanking
 
   # Participantes primero (con posición); después los que no cumplen requisitos, sin posición.
   def ordenar_y_posicionar(filas)
-    por_mejor = ->(fila) { [ -fila.resueltos, -(fila.promedio || 0), fila.technician.nombre_completo.to_s ] }
-    participantes, fuera = filas.partition(&:participa?)
+    # Ranking general: todos los técnicos, aunque no apliquen al bono.
+    @ranking_general = asignar_posiciones(filas.sort_by(&POR_MEJOR), :posicion_general)
 
+    # Ranking del bono: solo quienes cumplen los requisitos.
+    participantes, fuera = filas.partition(&:participa?)
+    ordenados = asignar_posiciones(participantes.sort_by(&POR_MEJOR), :posicion)
+
+    ordenados + fuera.sort_by(&POR_MEJOR)
+  end
+
+  POR_MEJOR = ->(fila) { [ -fila.resueltos, -(fila.promedio || 0), fila.technician.nombre_completo.to_s ] }
+
+  # Posiciones "de competencia": quien empata en casos y calificación comparte posición.
+  def asignar_posiciones(ordenadas, atributo)
     anterior = nil
     posicion = 0
-    ordenados = participantes.sort_by(&por_mejor)
-    ordenados.each_with_index do |fila, indice|
+    ordenadas.each_with_index do |fila, indice|
       clave = [ fila.resueltos, fila.promedio ]
       posicion = indice + 1 unless clave == anterior
-      fila.posicion = posicion
+      fila.public_send("#{atributo}=", posicion)
       anterior = clave
     end
-
-    ordenados + fuera.sort_by(&por_mejor)
+    ordenadas
   end
 end

@@ -189,7 +189,7 @@ class Empresa::RankingTest < ActionDispatch::IntegrationTest
   test "muestra el ranking del mes elegido con escalón y bono" do
     get empresa_ranking_path(mes: mes_anterior.strftime("%Y-%m"))
     assert_response :success
-    filas = css_select("tbody tr")
+    filas = css_select("#ranking-bono tbody tr")
     assert_equal 2, filas.size
     assert_match "Juan Pérez", filas.first.text
     assert_match "Plata", filas.first.text
@@ -414,11 +414,53 @@ class Empresa::RankingRequisitosTest < ActionDispatch::IntegrationTest
 
     get empresa_ranking_path(mes: mes_anterior.strftime("%Y-%m"))
     assert_response :success
-    assert_select "h2", text: "Participan en el ranking"
-    assert_select "h2", text: "No participan este mes"
+    assert_select "h2", text: /Ranking general/
+    assert_select "h2", text: /Aplican al bono/
+    assert_select "h2", text: /No aplican al bono/
     assert_match "Calificación 3,00 menor a 4,20", response.body
-    assert_equal 1, css_select(".pos").size
+    assert_equal 2, css_select("#ranking-general tbody tr").size, "el general lista a todos los técnicos"
+    assert_equal 1, css_select("#ranking-bono tbody tr").size, "solo Juan aplica al bono"
+    assert_equal 1, css_select("#no-participan tbody tr").size, "Carlos no aplica"
     assert_select "input[type=submit][value='Registrar pago']", 1
+  end
+
+  test "el ranking general muestra a todos con su posición general y si aplican al bono" do
+    resolver_casos(users(:tecnico), mes_anterior, 8, calificacion: 5)          # aplica, 8 casos
+    resolver_casos(users(:tecnico_carlos), mes_anterior, 20, calificacion: 3)  # no aplica (nota), pero tiene más casos
+
+    get empresa_ranking_path(mes: mes_anterior.strftime("%Y-%m"))
+    filas = css_select("#ranking-general tbody tr")
+    assert_match "Carlos Mena", filas.first.text, "en el general, Carlos va primero por casos"
+    assert_match "No aplica", filas.first.text
+    assert_match "Juan Pérez", filas.last.text
+    assert_match "puesto #1 del bono", filas.last.text, "en el ranking del bono, Juan es el primero"
+  end
+
+  test "quienes no aplican muestran cada parámetro frente a lo exigido" do
+    companies(:tecnifrio).update!(min_casos_participar: 20)
+    resolver_casos(users(:tecnico), mes_anterior, 24, calificacion: 3)          # casos ok, nota mal
+    resolver_casos(users(:tecnico_carlos), mes_anterior, 12, calificacion: 5)   # nota ok, casos mal
+
+    get empresa_ranking_path(mes: mes_anterior.strftime("%Y-%m"))
+    filas = css_select("#no-participan tbody tr")
+    assert_equal 2, filas.size
+
+    juan = filas.find { |fila| fila.text.include?("Juan Pérez") }
+    assert_match "24 / 20", juan.text.squish
+    assert_match "3,00 / 4,20", juan.text.squish
+    assert_equal 1, juan.css(".chk--ok").size
+    assert_equal 1, juan.css(".chk--no").size
+
+    carlos = filas.find { |fila| fila.text.include?("Carlos Mena") }
+    assert_match "12 / 20", carlos.text.squish
+    assert_match "5,00 / 4,20", carlos.text.squish
+  end
+
+  test "si todos cumplen, la tabla de no aplican lo dice" do
+    resolver_casos(users(:tecnico), mes_anterior, 6)
+    resolver_casos(users(:tecnico_carlos), mes_anterior, 6)
+    get empresa_ranking_path(mes: mes_anterior.strftime("%Y-%m"))
+    assert_match "Todos los técnicos cumplen los requisitos", response.body
   end
 
   test "sin sueldo base ofrece definirlo en lugar de registrar el pago" do
