@@ -20,6 +20,9 @@ class Company < ApplicationRecord
                        allow_blank: true
   validates :descripcion, length: { maximum: 1000 }
   validates :status, inclusion: { in: STATUSES }
+  # Requisitos para participar en el ranking y cobrar bono (cada empresa los ajusta; por defecto 4,2 y 20 casos).
+  validates :min_calificacion, numericality: { greater_than_or_equal_to: 1, less_than_or_equal_to: 5 }
+  validates :min_casos_participar, numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: 500 }
   validate :activa_requiere_electrodomesticos
 
   scope :activas, -> { where(status: "activa") }

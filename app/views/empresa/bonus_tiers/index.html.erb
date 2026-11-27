@@ -1,24 +1,42 @@
-<% content_for :title, "Bonos" %>
+<% content_for :title, "Bonos y requisitos" %>
 
 <div class="page-header">
   <div>
-    <h1>Escalones de bono</h1>
-    <p class="muted">Define cuántos casos resueltos al mes premia tu empresa y con cuánto dinero.</p>
+    <h1>Bonos y requisitos</h1>
+    <p class="muted">Define quién participa en el ranking y qué porcentaje de su sueldo base gana según los casos que resuelve al mes.</p>
   </div>
   <%= link_to "+ Nuevo escalón", new_empresa_bonus_tier_path, class: "btn btn--primary" %>
 </div>
 
 <div class="card">
-  <h2>¿Cómo funcionan?</h2>
+  <h2>Requisitos para participar y cobrar bono</h2>
+  <%= form_with model: @company, url: empresa_requisitos_path, method: :patch, scope: :company, class: "form inline-form" do |f| %>
+    <div class="field">
+      <%= f.label :min_calificacion, "Calificación promedio mínima (1 a 5)" %>
+      <%= f.number_field :min_calificacion, required: true, min: 1, max: 5, step: 0.01 %>
+    </div>
+    <div class="field">
+      <%= f.label :min_casos_participar, "Casos resueltos mínimos al mes" %>
+      <%= f.number_field :min_casos_participar, required: true, min: 1, max: 500, step: 1 %>
+    </div>
+    <%= f.submit "Guardar requisitos", class: "btn btn--primary" %>
+  <% end %>
+  <p class="hint">Quien no cumpla ambos requisitos en el mes aparece fuera del ranking, sin bono. Valores recomendados: nota 4,2 y 20 casos (≈ 1 caso por día hábil).</p>
+</div>
+
+<div class="card">
+  <h2>¿Cómo se calcula el bono?</h2>
   <ul class="rules">
-    <li>Cada escalón fija un mínimo de <strong>casos resueltos en el mes</strong> y el monto del bono.</li>
-    <li>A fin de mes, cada técnico recibe <strong>solo el escalón más alto</strong> que alcanzó: los bonos no se acumulan.</li>
-    <li>Un escalón con más casos debe pagar más que los anteriores.</li>
+    <li>Cada escalón fija un mínimo de <strong>casos resueltos en el mes</strong> y un <strong>porcentaje del sueldo base</strong> del técnico.</li>
+    <li>A fin de mes, cada técnico que participa recibe <strong>solo el escalón más alto</strong> que alcanzó: los bonos no se acumulan.</li>
+    <li>Un escalón con más casos debe pagar un porcentaje mayor que los anteriores.</li>
+    <li>Necesitas registrar el <%= link_to "sueldo base de cada técnico", empresa_technicians_path %> para que se calcule el dinero.</li>
     <li>UFix <strong>solo registra</strong> el pago como constancia; no mueve dinero.</li>
   </ul>
 </div>
 
 <div class="card card--flush">
+  <h2 class="card__title">Escalones</h2>
   <table class="table">
     <thead>
       <tr><th>Escalón</th><th>Casos resueltos al mes (mínimo)</th><th>Bono</th><th class="actions-col">Acciones</th></tr>
@@ -27,8 +45,9 @@
       <% @escalones.each do |escalon| %>
         <tr>
           <td><%= badge(escalon.nombre, :ok) %></td>
-          <td>desde <strong><%= escalon.casos_minimos %></strong> casos</td>
-          <td><strong><%= number_to_currency(escalon.monto) %></strong></td>
+          <td>desde <strong><%= escalon.casos_minimos %></strong> casos
+            <% if escalon.casos_minimos < @company.min_casos_participar %><span class="hint">(menor al mínimo de participación)</span><% end %></td>
+          <td><strong><%= porcentaje(escalon.porcentaje) %></strong> <span class="hint">del sueldo base · ej.: <%= number_to_currency(escalon.monto_para(500)) %> con $500</span></td>
           <td class="actions">
             <%= link_to "Editar", edit_empresa_bonus_tier_path(escalon), class: "btn btn--sm" %>
             <%= button_to "Eliminar", empresa_bonus_tier_path(escalon), method: :delete, class: "btn btn--danger btn--sm",
@@ -37,7 +56,7 @@
         </tr>
       <% end %>
       <% if @escalones.empty? %>
-        <tr><td colspan="4" class="muted">Aún no hay escalones. Crea el primero (por ejemplo: Bronce, 5 casos, $30).</td></tr>
+        <tr><td colspan="4" class="muted">Aún no hay escalones. Crea el primero (por ejemplo: Bronce, 30 casos, 5 %).</td></tr>
       <% end %>
     </tbody>
   </table>
@@ -46,7 +65,7 @@
 <div class="card card--flush">
   <h2 class="card__title">Últimos pagos registrados</h2>
   <table class="table">
-    <thead><tr><th>Período</th><th>Técnico</th><th>Escalón</th><th>Casos</th><th>Monto</th></tr></thead>
+    <thead><tr><th>Período</th><th>Técnico</th><th>Escalón</th><th>Casos</th><th>Cálculo</th><th>Monto</th></tr></thead>
     <tbody>
       <% @pagos.each do |pago| %>
         <tr>
@@ -54,11 +73,12 @@
           <td><%= pago.technician.nombre_completo %></td>
           <td><%= badge(pago.tier_nombre, :ok) %></td>
           <td><%= pago.casos_resueltos %></td>
-          <td><%= number_to_currency(pago.monto) %></td>
+          <td><span class="hint"><%= porcentaje(pago.porcentaje) %> de <%= number_to_currency(pago.sueldo_base) %></span></td>
+          <td><strong><%= number_to_currency(pago.monto) %></strong></td>
         </tr>
       <% end %>
       <% if @pagos.empty? %>
-        <tr><td colspan="5" class="muted">Todavía no registraste pagos. Se registran desde el <%= link_to "ranking", empresa_ranking_path %> cuando el mes cierra.</td></tr>
+        <tr><td colspan="6" class="muted">Todavía no registraste pagos. Se registran desde el <%= link_to "ranking", empresa_ranking_path %> cuando el mes cierra.</td></tr>
       <% end %>
     </tbody>
   </table>

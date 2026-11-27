@@ -6,6 +6,7 @@ tecnifrio:
   direccion: Av. Amazonas
   city: quito
   status: activa
+  min_casos_participar: 1
 
 hogarfix:
   nombre: HogarFix Cía. Ltda.

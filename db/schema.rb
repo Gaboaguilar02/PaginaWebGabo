@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_28_004500) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_28_010003) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -61,6 +61,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_28_004500) do
     t.datetime "pagado_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "porcentaje", precision: 5, scale: 2, default: "0.0", null: false
+    t.decimal "sueldo_base", precision: 10, scale: 2, default: "0.0", null: false
+    t.decimal "promedio", precision: 3, scale: 2
     t.index ["bonus_tier_id"], name: "index_bonus_payments_on_bonus_tier_id"
     t.index ["company_id"], name: "index_bonus_payments_on_company_id"
     t.index ["registrado_por_id"], name: "index_bonus_payments_on_registrado_por_id"
@@ -72,9 +75,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_28_004500) do
     t.integer "company_id", null: false
     t.string "nombre", null: false
     t.integer "casos_minimos", null: false
-    t.decimal "monto", precision: 10, scale: 2, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "porcentaje", precision: 5, scale: 2, default: "5.0", null: false
     t.index ["company_id", "casos_minimos"], name: "index_bonus_tiers_on_company_id_and_casos_minimos", unique: true
     t.index ["company_id"], name: "index_bonus_tiers_on_company_id"
   end
@@ -100,6 +103,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_28_004500) do
     t.integer "reviews_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "min_calificacion", precision: 3, scale: 2, default: "4.2", null: false
+    t.integer "min_casos_participar", default: 20, null: false
     t.index ["city_id"], name: "index_companies_on_city_id"
     t.index ["ruc"], name: "index_companies_on_ruc", unique: true
     t.index ["status"], name: "index_companies_on_status"
@@ -166,6 +171,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_28_004500) do
     t.string "role", default: "cliente", null: false
     t.boolean "activo", default: true, null: false
     t.integer "company_id"
+    t.decimal "sueldo_base", precision: 10, scale: 2
     t.index ["cedula"], name: "index_users_on_cedula", unique: true
     t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["username"], name: "index_users_on_username", unique: true

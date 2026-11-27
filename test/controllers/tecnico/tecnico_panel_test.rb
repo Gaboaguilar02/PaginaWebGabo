@@ -185,7 +185,7 @@ class Tecnico::DesempenoTest < ActionDispatch::IntegrationTest
 
     get tecnico_desempeno_path(mes: mes_anterior.strftime("%Y-%m"))
     assert_response :success
-    assert_match "$60,00", response.body
+    assert_match "$50,00", response.body
     assert_select "td", text: "Plata"
   end
 
@@ -194,5 +194,46 @@ class Tecnico::DesempenoTest < ActionDispatch::IntegrationTest
     BonusPayment.registrar(company: companies(:tecnifrio), technician: users(:tecnico_carlos), periodo: mes_anterior, por: users(:empresa))
     get tecnico_desempeno_path
     assert_match "Todavía no tienes bonos registrados", response.body
+  end
+end
+
+class Tecnico::RequisitosTest < ActionDispatch::IntegrationTest
+  setup do
+    login_as users(:tecnico)
+    crear_escalones(companies(:tecnifrio))
+  end
+
+  test "un técnico que cumple los requisitos ve su escalón, porcentaje y dinero" do
+    resolver_casos(users(:tecnico), mes_actual, 6)
+    get tecnico_root_path
+    assert_select ".requisito.is-ok", 2
+    assert_match "Bronce", response.body
+    assert_match "5 %", response.body
+    assert_match "$25,00", response.body # 5 % de $500
+  end
+
+  test "un técnico que no cumple los requisitos ve que no participa y por qué" do
+    companies(:tecnifrio).update!(min_casos_participar: 20)
+    resolver_casos(users(:tecnico), mes_actual, 3, calificacion: 3)
+    get tecnico_root_path
+    assert_match "No participas este mes", response.body
+    assert_select ".requisito.is-pending", 2
+    assert_match "faltan 17 casos", response.body
+  end
+
+  test "sin sueldo base registrado el técnico lo ve explicado" do
+    users(:tecnico).update!(sueldo_base: nil)
+    resolver_casos(users(:tecnico), mes_actual, 6)
+    get tecnico_root_path
+    assert_match "aún no registró tu sueldo base", response.body
+  end
+
+  test "el desempeño no lista como participantes a quienes no cumplen" do
+    resolver_casos(users(:tecnico), mes_actual, 6)
+    resolver_casos(users(:tecnico_carlos), mes_actual, 6, calificacion: 2)
+    get tecnico_desempeno_path
+    assert_response :success
+    assert_equal 1, css_select(".pos").size
+    assert_match "No participan este mes", response.body
   end
 end

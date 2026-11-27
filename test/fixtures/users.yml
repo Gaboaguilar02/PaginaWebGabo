@@ -24,6 +24,7 @@ tecnico:
   role: tecnico
   activo: true
   company: tecnifrio
+  sueldo_base: 500
   password_digest: <%= password_digest %>
 
 cliente:
@@ -49,6 +50,7 @@ tecnico_carlos:
   role: tecnico
   activo: true
   company: tecnifrio
+  sueldo_base: 600
   password_digest: <%= password_digest %>
 
 empresa_hogarfix:

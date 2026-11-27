@@ -3,7 +3,7 @@
 <div class="page-header">
   <div>
     <h1>Mi desempeño · <%= l periodo, format: "%B %Y" %></h1>
-    <p class="muted">Tu posición entre los técnicos de <%= @company.nombre %>, tu escalón de bono y lo que dicen tus clientes.</p>
+    <p class="muted">Tu posición entre los técnicos de <%= @company.nombre %>, tus requisitos, tu escalón de bono y lo que dicen tus clientes.</p>
   </div>
   <%= render "shared/filtro_mes", ruta: tecnico_desempeno_path %>
 </div>
@@ -11,22 +11,22 @@
 <div class="stats">
   <div class="stat">
     <span class="stat__label">Mi posición</span>
-    <span class="stat__value"><%= @mi_fila ? "##{@mi_fila.posicion}" : "—" %></span>
-    <span class="stat__hint">de <%= @ranking.filas.size %> técnicos</span>
+    <span class="stat__value"><%= @mi_fila&.participa? ? "##{@mi_fila.posicion}" : "—" %></span>
+    <span class="stat__hint"><%= @mi_fila&.participa? ? "de #{@ranking.participantes.size} participantes" : "No participas este mes" %></span>
   </div>
   <div class="stat">
     <span class="stat__label">Casos resueltos</span>
     <span class="stat__value"><%= @mi_fila&.resueltos.to_i %></span>
-    <span class="stat__hint">en el mes</span>
+    <span class="stat__hint">mínimo <%= @company.min_casos_participar %> para participar</span>
   </div>
   <div class="stat">
     <span class="stat__label">Calificación</span>
-    <span class="stat__value"><%= @mi_fila&.promedio ? "#{@mi_fila.promedio} ★" : "—" %></span>
-    <span class="stat__hint"><%= pluralize(@mi_fila&.calificados.to_i, "calificación", "calificaciones") %></span>
+    <span class="stat__value"><%= @mi_fila&.promedio ? "#{nota(@mi_fila.promedio)} ★" : "—" %></span>
+    <span class="stat__hint">mínima <%= nota(@company.min_calificacion) %> · <%= pluralize(@mi_fila&.calificados.to_i, "calificación", "calificaciones") %></span>
   </div>
   <div class="stat">
     <span class="stat__label">Bono del mes</span>
-    <span class="stat__value"><%= @mi_fila&.tier ? number_to_currency(@mi_fila.bono) : "—" %></span>
+    <span class="stat__value"><%= @mi_fila&.con_bono? ? number_to_currency(@mi_fila.bono) : "—" %></span>
     <span class="stat__hint">
       <% if @mi_fila&.tier %>
         Escalón <%= @mi_fila.tier.nombre %> · <%= @mi_fila.pagado? ? "pagado" : (@ranking.cerrado? ? "pendiente de pago" : "proyectado") %>
@@ -37,21 +37,24 @@
   </div>
 </div>
 
+<div class="card">
+  <h2>Mis requisitos y mi bono</h2>
+  <% if @mi_fila %>
+    <%= render "tecnico/shared/requisitos", fila: @mi_fila, company: @company, ranking: @ranking, siguiente_escalon: @siguiente_escalon %>
+  <% end %>
+</div>
+
 <% if @escalones.any? %>
   <div class="card">
     <h2>Escalones de bono de tu empresa</h2>
     <ul class="tiers">
       <% @escalones.each do |escalon| %>
         <% alcanzado = @mi_fila&.tier && @mi_fila.tier.id == escalon.id %>
-        <li class="tier <%= "tier--mine" if alcanzado %>"><strong><%= escalon.nombre %></strong> <span>desde <%= escalon.casos_minimos %> casos</span> <b><%= number_to_currency(escalon.monto) %></b><%= " ✓" if alcanzado %></li>
+        <li class="tier <%= "tier--mine" if alcanzado %>"><strong><%= escalon.nombre %></strong> <span>desde <%= escalon.casos_minimos %> casos</span>
+          <b><%= porcentaje(escalon.porcentaje) %></b><%= " ✓" if alcanzado %></li>
       <% end %>
     </ul>
-    <% if @siguiente_escalon && !@ranking.cerrado? %>
-      <% faltan = @siguiente_escalon.casos_minimos - @mi_fila&.resueltos.to_i %>
-      <p class="hint">Te <%= faltan == 1 ? "falta 1 caso" : "faltan #{faltan} casos" %> para <strong><%= @siguiente_escalon.nombre %></strong>. Solo se paga el escalón más alto alcanzado.</p>
-    <% else %>
-      <p class="hint">Solo se paga el escalón más alto alcanzado; los bonos no se acumulan.</p>
-    <% end %>
+    <p class="hint">Solo se paga el escalón más alto alcanzado; los bonos no se acumulan. El porcentaje se aplica a tu sueldo base.</p>
   </div>
 <% end %>
 
@@ -60,7 +63,7 @@
   <table class="table">
     <thead><tr><th>#</th><th>Técnico</th><th class="bar-col">Casos resueltos</th><th>Calificación</th><th>Escalón</th></tr></thead>
     <tbody>
-      <% @ranking.filas.each do |fila| %>
+      <% @ranking.participantes.each do |fila| %>
         <% yo = fila.technician.id == current_user.id %>
         <tr class="<%= "row--me" if yo %>">
           <td><%= posicion(fila.posicion) %></td>
@@ -69,12 +72,19 @@
             <div class="bar"><span class="bar__fill" style="width: <%= (fila.resueltos * 100.0 / @maximo).round %>%"></span></div>
             <strong><%= fila.resueltos %></strong>
           </td>
-          <td><%= fila.promedio ? "#{fila.promedio} ★" : "—" %></td>
+          <td><%= nota(fila.promedio) %> ★</td>
           <td><%= fila.tier ? badge(fila.tier.nombre, :ok) : badge("Ninguno", :neutral) %></td>
         </tr>
       <% end %>
+      <% if @ranking.participantes.empty? %>
+        <tr><td colspan="5" class="muted">Ningún técnico cumple los requisitos en este período.</td></tr>
+      <% end %>
     </tbody>
   </table>
+  <% if @ranking.no_participantes.any? %>
+    <p class="card__foot">No participan este mes:
+      <%= @ranking.no_participantes.map { |f| f.technician.id == current_user.id ? "tú" : f.technician.nombre_completo }.to_sentence %>.</p>
+  <% end %>
 </div>
 
 <div class="grid-2">
@@ -101,7 +111,7 @@
             <td><%= l pago.periodo, format: "%B %Y" %></td>
             <td><%= badge(pago.tier_nombre, :ok) %></td>
             <td><%= pago.casos_resueltos %></td>
-            <td><strong><%= number_to_currency(pago.monto) %></strong></td>
+            <td><strong><%= number_to_currency(pago.monto) %></strong> <span class="hint"><%= porcentaje(pago.porcentaje) %></span></td>
           </tr>
         <% end %>
         <% if @pagos.empty? %>

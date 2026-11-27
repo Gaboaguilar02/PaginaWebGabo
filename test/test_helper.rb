@@ -44,8 +44,8 @@ module RankingHelper
   end
 
   def crear_escalones(company)
-    [ [ "Bronce", 5, 30 ], [ "Plata", 10, 60 ], [ "Oro", 15, 100 ] ].map do |nombre, casos, monto|
-      BonusTier.create!(company: company, nombre: nombre, casos_minimos: casos, monto: monto)
+    [ [ "Bronce", 5, 5 ], [ "Plata", 10, 10 ], [ "Oro", 15, 15 ] ].map do |nombre, casos, porcentaje|
+      BonusTier.create!(company: company, nombre: nombre, casos_minimos: casos, porcentaje: porcentaje)
     end
   end
 

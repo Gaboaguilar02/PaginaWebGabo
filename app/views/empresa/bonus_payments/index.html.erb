@@ -19,7 +19,7 @@
 <div class="card card--flush">
   <table class="table">
     <thead>
-      <tr><th>Período</th><th>Técnico</th><th>Escalón</th><th>Casos resueltos</th><th>Monto</th><th>Registrado por</th><th>Fecha</th></tr>
+      <tr><th>Período</th><th>Técnico</th><th>Escalón</th><th>Casos resueltos</th><th>Cálculo</th><th>Monto</th><th>Registrado por</th><th>Fecha</th></tr>
     </thead>
     <tbody>
       <% @pagos.each do |pago| %>
@@ -28,13 +28,14 @@
           <td><%= pago.technician.nombre_completo %></td>
           <td><%= badge(pago.tier_nombre, :ok) %> <span class="hint">desde <%= pago.casos_minimos %></span></td>
           <td><%= pago.casos_resueltos %></td>
+          <td><span class="hint"><%= porcentaje(pago.porcentaje) %> de <%= number_to_currency(pago.sueldo_base) %><%= " · nota #{nota(pago.promedio)}" if pago.promedio %></span></td>
           <td><strong><%= number_to_currency(pago.monto) %></strong></td>
           <td><%= pago.registrado_por.nombre_completo %></td>
           <td><%= l pago.pagado_at.to_date, format: :short %></td>
         </tr>
       <% end %>
       <% if @pagos.empty? %>
-        <tr><td colspan="7" class="muted">Todavía no hay pagos registrados.</td></tr>
+        <tr><td colspan="8" class="muted">Todavía no hay pagos registrados.</td></tr>
       <% end %>
     </tbody>
   </table>

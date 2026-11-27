@@ -1,0 +1,49 @@
+<%# Requisitos del mes y bono del técnico. Locales: fila (MonthlyRanking::Row), company, ranking, siguiente_escalon %>
+<% casos = fila.resueltos %>
+<% nota_ok = fila.promedio && fila.promedio >= company.min_calificacion %>
+<% casos_ok = casos >= company.min_casos_participar %>
+
+<div class="requisitos">
+  <div class="requisito <%= nota_ok ? "is-ok" : "is-pending" %>">
+    <span class="requisito__icon"><%= nota_ok ? "✓" : "✗" %></span>
+    <div>
+      <strong>Calificación ≥ <%= nota(company.min_calificacion) %></strong><br>
+      <span class="hint">Tu promedio del mes: <%= fila.promedio ? "#{nota(fila.promedio)} ★ (#{fila.calificados} #{fila.calificados == 1 ? "calificación" : "calificaciones"})" : "sin calificaciones todavía" %></span>
+    </div>
+  </div>
+  <div class="requisito <%= casos_ok ? "is-ok" : "is-pending" %>">
+    <span class="requisito__icon"><%= casos_ok ? "✓" : "✗" %></span>
+    <div>
+      <strong>Al menos <%= company.min_casos_participar %> casos resueltos</strong><br>
+      <span class="hint">Llevas <%= casos %> en el mes</span>
+    </div>
+  </div>
+</div>
+
+<% if fila.participa? %>
+  <% if fila.tier %>
+    <p class="bono-line">Escalón alcanzado: <%= badge(fila.tier.nombre, :ok) %>
+      <strong><%= porcentaje(fila.tier.porcentaje) %></strong> de tu sueldo base
+      <% if fila.tiene_sueldo? %>
+        (<%= number_to_currency(fila.sueldo_base) %>) = <strong><%= number_to_currency(fila.bono) %></strong>
+        <% if fila.pagado? %><%= badge("Pagado", :ok) %><% elsif !ranking.cerrado? %><span class="hint">(proyectado: el mes sigue abierto)</span><% end %>
+      <% else %>
+        <span class="hint">· tu empresa aún no registró tu sueldo base, por eso todavía no se calcula el dinero.</span>
+      <% end %>
+    </p>
+  <% else %>
+    <p class="muted">Participas en el ranking, pero todavía no alcanzas el primer escalón de bono.</p>
+  <% end %>
+  <% if siguiente_escalon && !ranking.cerrado? %>
+    <% faltan = siguiente_escalon.casos_minimos - casos %>
+    <div class="progress"><span class="progress__fill" style="width: <%= [ casos * 100 / siguiente_escalon.casos_minimos, 100 ].min %>%"></span></div>
+    <p class="hint">Te <%= faltan == 1 ? "falta 1 caso" : "faltan #{faltan} casos" %> para el escalón <strong><%= siguiente_escalon.nombre %></strong> (<%= porcentaje(siguiente_escalon.porcentaje) %> de tu sueldo base).</p>
+  <% end %>
+<% else %>
+  <p class="bono-line"><%= badge("No participas este mes", :warn) %> <span class="hint">Cumple ambos requisitos para entrar al ranking y poder cobrar bono.</span></p>
+  <% if !casos_ok && !ranking.cerrado? %>
+    <% faltan = company.min_casos_participar - casos %>
+    <div class="progress"><span class="progress__fill" style="width: <%= [ casos * 100 / company.min_casos_participar, 100 ].min %>%"></span></div>
+    <p class="hint">Te <%= faltan == 1 ? "falta 1 caso" : "faltan #{faltan} casos" %> para llegar al mínimo de participación.</p>
+  <% end %>
+<% end %>

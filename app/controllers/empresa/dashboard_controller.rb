@@ -14,7 +14,7 @@ module Empresa
       @resueltas_mes = @ranking.total_resueltos
       @promedio_mes = @ranking.promedio_general
 
-      @top = @ranking.filas.first(3)
+      @top = @ranking.participantes.first(3)
       @pendientes = casos.where(status: %w[ solicitada aceptada ]).includes(:appliance_type, :client).order(:created_at).limit(5)
     end
   end

@@ -48,6 +48,8 @@ Rails.application.routes.draw do
     end
 
     get "ranking", to: "rankings#index", as: :ranking
+    patch "requisitos", to: "requisitos#update", as: :requisitos
+    resources :technicians, path: "tecnicos", only: %i[ index edit update ]
     resources :bonus_tiers, path: "escalones", except: :show
     resources :bonus_payments, path: "pagos", only: %i[ index create ]
   end

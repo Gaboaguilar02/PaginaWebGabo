@@ -3,7 +3,7 @@
 <div class="page-header">
   <div>
     <h1>Ranking de técnicos · <%= l periodo, format: "%B %Y" %></h1>
-    <p class="muted">Ordenado por casos resueltos en el mes; si empatan, por la calificación de los clientes.</p>
+    <p class="muted">Participan quienes tienen calificación ≥ <strong><%= nota(@company.min_calificacion) %></strong> y al menos <strong><%= @company.min_casos_participar %></strong> casos resueltos en el mes.</p>
   </div>
   <%= render "shared/filtro_mes", ruta: empresa_ranking_path %>
 </div>
@@ -12,12 +12,12 @@
   <div class="stat">
     <span class="stat__label">Casos resueltos</span>
     <span class="stat__value"><%= @ranking.total_resueltos %></span>
-    <span class="stat__hint">entre <%= @ranking.filas.size %> técnicos</span>
+    <span class="stat__hint"><%= @ranking.participantes.size %> de <%= @ranking.filas.size %> técnicos participan</span>
   </div>
   <div class="stat">
     <span class="stat__label"><%= @ranking.cerrado? ? "Bonos a pagar" : "Bonos proyectados" %></span>
     <span class="stat__value"><%= number_to_currency(@ranking.total_bonos) %></span>
-    <span class="stat__hint"><%= @ranking.cerrado? ? "Según el escalón más alto de cada técnico" : "El mes sigue abierto: puede cambiar" %></span>
+    <span class="stat__hint"><%= @ranking.cerrado? ? "Escalón más alto de cada participante" : "El mes sigue abierto: puede cambiar" %></span>
   </div>
   <div class="stat">
     <span class="stat__label">Pagado</span>
@@ -32,20 +32,21 @@
 </div>
 
 <div class="card">
-  <h2>Escalones de bono de la empresa</h2>
+  <h2>Escalones de bono (% del sueldo base)</h2>
   <% if @escalones.any? %>
     <ul class="tiers">
       <% @escalones.each do |escalon| %>
-        <li class="tier"><strong><%= escalon.nombre %></strong> <span>desde <%= escalon.casos_minimos %> casos</span> <b><%= number_to_currency(escalon.monto) %></b></li>
+        <li class="tier"><strong><%= escalon.nombre %></strong> <span>desde <%= escalon.casos_minimos %> casos</span> <b><%= porcentaje(escalon.porcentaje) %></b></li>
       <% end %>
     </ul>
-    <p class="hint">Solo se paga el escalón más alto alcanzado; los bonos no se acumulan.</p>
+    <p class="hint">Solo se paga el escalón más alto alcanzado; los bonos no se acumulan. <%= link_to "Editar requisitos y escalones", empresa_bonus_tiers_path %></p>
   <% else %>
     <p class="muted">Aún no definiste escalones. <%= link_to "Crear el primero", new_empresa_bonus_tier_path %> para que el ranking calcule los bonos.</p>
   <% end %>
 </div>
 
 <div class="card card--flush">
+  <h2 class="card__title">Participan en el ranking</h2>
   <table class="table">
     <thead>
       <tr>
@@ -53,36 +54,43 @@
         <th>Técnico</th>
         <th class="bar-col">Casos resueltos</th>
         <th>Calificación</th>
-        <th>Escalón alcanzado</th>
+        <th>Escalón</th>
         <th>Bono</th>
         <th class="actions-col">Pago</th>
       </tr>
     </thead>
     <tbody>
-      <% @ranking.filas.each do |fila| %>
+      <% @maximo = [ @ranking.filas.map(&:resueltos).max.to_i, 1 ].max %>
+      <% @ranking.participantes.each do |fila| %>
         <tr>
           <td><%= posicion(fila.posicion) %></td>
-          <td>
-            <%= fila.technician.nombre_completo %>
-            <% unless fila.technician.activo? %><%= badge("Inactivo", :danger) %><% end %>
-          </td>
+          <td><%= fila.technician.nombre_completo %> <% unless fila.technician.activo? %><%= badge("Inactivo", :danger) %><% end %></td>
           <td class="bar-col">
             <div class="bar"><span class="bar__fill" style="width: <%= (fila.resueltos * 100.0 / @maximo).round %>%"></span></div>
             <strong><%= fila.resueltos %></strong>
           </td>
-          <td><%= fila.promedio ? "#{estrellas(fila.promedio.round)} #{fila.promedio}" : "—" %> <span class="hint"><%= "(#{fila.calificados})" if fila.calificados.positive? %></span></td>
-          <td><%= fila.tier ? badge(fila.tier.nombre, :ok) : badge("Ninguno", :neutral) %></td>
-          <td><%= fila.tier ? number_to_currency(fila.bono) : "—" %></td>
+          <td><%= estrellas(fila.promedio.round) %> <%= nota(fila.promedio) %> <span class="hint">(<%= fila.calificados %>)</span></td>
+          <td><%= fila.tier ? "#{badge(fila.tier.nombre, :ok)} <span class='hint'>#{porcentaje(fila.tier.porcentaje)}</span>".html_safe : badge("Sin escalón", :neutral) %></td>
+          <td>
+            <% if fila.con_bono? %>
+              <strong><%= number_to_currency(fila.bono) %></strong>
+              <span class="hint"><%= porcentaje(fila.tier.porcentaje) %> de <%= number_to_currency(fila.sueldo_base) %></span>
+            <% elsif fila.falta_sueldo? %>
+              <%= link_to "Definir sueldo base", edit_empresa_technician_path(fila.technician), class: "btn btn--sm" %>
+            <% else %>
+              —
+            <% end %>
+          </td>
           <td class="actions">
             <% if fila.pagado? %>
               <%= badge("Pagado", :ok) %> <span class="hint"><%= l fila.pago.pagado_at.to_date, format: :short %></span>
-            <% elsif fila.tier && @ranking.cerrado? %>
+            <% elsif fila.con_bono? && @ranking.cerrado? %>
               <%= form_with url: empresa_bonus_payments_path, method: :post, data: { turbo_confirm: "¿Registrar el pago de #{number_to_currency(fila.bono)} a #{fila.technician.nombre_completo}?" } do %>
                 <%= hidden_field_tag :technician_id, fila.technician.id %>
                 <%= hidden_field_tag :mes, periodo.strftime("%Y-%m") %>
                 <%= submit_tag "Registrar pago", class: "btn btn--primary btn--sm" %>
               <% end %>
-            <% elsif fila.tier %>
+            <% elsif fila.con_bono? %>
               <span class="hint">Disponible al cerrar el mes</span>
             <% else %>
               <span class="hint">—</span>
@@ -90,11 +98,30 @@
           </td>
         </tr>
       <% end %>
-      <% if @ranking.filas.empty? %>
-        <tr><td colspan="7" class="muted">Tu empresa aún no tiene técnicos. El administrador puede crearlos desde Usuarios.</td></tr>
+      <% if @ranking.participantes.empty? %>
+        <tr><td colspan="7" class="muted">Ningún técnico cumple los requisitos en este período.</td></tr>
       <% end %>
     </tbody>
   </table>
 </div>
 
-<p class="hint">El pago solo se <strong>registra</strong> como constancia (por casos resueltos): UFix no mueve dinero. Cada técnico tiene a lo sumo un pago por mes.</p>
+<% if @ranking.no_participantes.any? %>
+  <div class="card card--flush">
+    <h2 class="card__title">No participan este mes</h2>
+    <table class="table">
+      <thead><tr><th>Técnico</th><th>Casos resueltos</th><th>Calificación</th><th>Por qué no participa</th></tr></thead>
+      <tbody>
+        <% @ranking.no_participantes.each do |fila| %>
+          <tr>
+            <td><%= fila.technician.nombre_completo %> <% unless fila.technician.activo? %><%= badge("Inactivo", :danger) %><% end %></td>
+            <td><%= fila.resueltos %></td>
+            <td><%= nota(fila.promedio) %></td>
+            <td><% fila.motivos.each do |motivo| %><%= badge(motivo.capitalize, :warn) %> <% end %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<p class="hint">El pago solo se <strong>registra</strong> como constancia (por casos resueltos): UFix no mueve dinero. Cada técnico tiene a lo sumo un pago por mes. La calificación se calcula con los casos del mes que sí fueron calificados.</p>

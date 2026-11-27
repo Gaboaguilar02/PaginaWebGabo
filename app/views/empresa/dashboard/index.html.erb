@@ -37,7 +37,7 @@
   </div>
   <div class="stat">
     <span class="stat__label">Calificación del mes</span>
-    <span class="stat__value"><%= @promedio_mes ? "#{@promedio_mes} ★" : "—" %></span>
+    <span class="stat__value"><%= @promedio_mes ? "#{nota(@promedio_mes)} ★" : "—" %></span>
     <span class="stat__hint">Promedio de tus clientes</span>
   </div>
   <div class="stat">
@@ -58,12 +58,12 @@
             <td><%= posicion(fila.posicion) %></td>
             <td><%= fila.technician.nombre_completo %></td>
             <td><strong><%= fila.resueltos %></strong></td>
-            <td><%= fila.promedio ? "#{fila.promedio} ★" : "—" %></td>
+            <td><%= nota(fila.promedio) %> ★</td>
             <td><%= fila.tier ? badge(fila.tier.nombre, :ok) : badge("Sin escalón", :neutral) %></td>
           </tr>
         <% end %>
         <% if @top.empty? %>
-          <tr><td colspan="5" class="muted">Aún no tienes técnicos activos.</td></tr>
+          <tr><td colspan="5" class="muted">Ningún técnico cumple aún los requisitos del mes.</td></tr>
         <% end %>
       </tbody>
     </table>

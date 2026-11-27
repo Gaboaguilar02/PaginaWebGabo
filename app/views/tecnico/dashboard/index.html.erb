@@ -26,30 +26,25 @@
   </div>
   <div class="stat">
     <span class="stat__label">Mi posición</span>
-    <span class="stat__value"><%= @mi_fila ? "##{@mi_fila.posicion}" : "—" %></span>
-    <span class="stat__hint">de <%= @ranking.filas.size %> técnicos · <%= link_to "Ver ranking", tecnico_desempeno_path(mes: periodo.strftime("%Y-%m")) %></span>
+    <span class="stat__value"><%= @mi_fila&.participa? ? "##{@mi_fila.posicion}" : "—" %></span>
+    <span class="stat__hint">
+      <% if @mi_fila&.participa? %>de <%= @ranking.participantes.size %> participantes · <%= link_to "Ver ranking", tecnico_desempeno_path(mes: periodo.strftime("%Y-%m")) %>
+      <% else %>Aún no participas este mes<% end %>
+    </span>
   </div>
   <div class="stat">
     <span class="stat__label">Mi calificación</span>
-    <span class="stat__value"><%= @mi_fila&.promedio ? "#{@mi_fila.promedio} ★" : "—" %></span>
+    <span class="stat__value"><%= @mi_fila&.promedio ? "#{nota(@mi_fila.promedio)} ★" : "—" %></span>
     <span class="stat__hint">Promedio de tus clientes en el mes</span>
   </div>
 </div>
 
 <div class="card">
-  <h2>Mi bono de <%= l periodo, format: "%B" %></h2>
-  <% resueltos = @mi_fila&.resueltos.to_i %>
-  <% if @mi_fila&.tier %>
-    <p>Escalón alcanzado: <%= badge(@mi_fila.tier.nombre, :ok) %> <strong><%= number_to_currency(@mi_fila.bono) %></strong>
-      <% if @mi_fila.pagado? %><%= badge("Pagado", :ok) %><% elsif !@ranking.cerrado? %><span class="hint">(proyectado: el mes sigue abierto)</span><% end %></p>
-  <% else %>
-    <p class="muted">Todavía no alcanzas ningún escalón este mes.</p>
+  <h2>Mis requisitos y mi bono de <%= l periodo, format: "%B" %></h2>
+  <% if @mi_fila %>
+    <%= render "tecnico/shared/requisitos", fila: @mi_fila, company: @company, ranking: @ranking, siguiente_escalon: @siguiente_escalon %>
   <% end %>
-  <% if @siguiente_escalon && !@ranking.cerrado? %>
-    <% faltan = @siguiente_escalon.casos_minimos - resueltos %>
-    <div class="progress"><span class="progress__fill" style="width: <%= [ resueltos * 100 / @siguiente_escalon.casos_minimos, 100 ].min %>%"></span></div>
-    <p class="hint">Te <%= faltan == 1 ? "falta 1 caso" : "faltan #{faltan} casos" %> para el escalón <strong><%= @siguiente_escalon.nombre %></strong> (<%= number_to_currency(@siguiente_escalon.monto) %>).</p>
-  <% elsif @company.bonus_tiers.none? %>
+  <% if @company.bonus_tiers.none? %>
     <p class="hint">Tu empresa aún no definió escalones de bono.</p>
   <% end %>
 </div>

@@ -127,31 +127,45 @@ unless ENV["SEED_DEMO"] == "false"
   clientes = [ User.find_by!(username: "cliente2"), User.find_by!(username: "cliente3") ]
   equipos = ApplianceType.where(nombre: [ "Lavadora", "Refrigerador", "Secadora" ]).order(:nombre).to_a
 
-  # Escalones de bono de TecniFrío (con más casos, más dinero; se paga solo el más alto alcanzado).
-  [ [ "Bronce", 5, 30 ], [ "Plata", 10, 60 ], [ "Oro", 15, 100 ] ].each do |nombre, casos, monto|
-    BonusTier.find_or_create_by!(company: tecnifrio, casos_minimos: casos) { |escalon| escalon.assign_attributes(nombre: nombre, monto: monto) }
+  # Reglas de TecniFrío: para participar y cobrar bono, nota promedio >= 4,2 y >= 20 casos resueltos al mes (≈ 1 por día hábil).
+  tecnifrio.update!(min_calificacion: 4.2, min_casos_participar: 20)
+
+  # Sueldo base de cada técnico: el bono es un porcentaje de este sueldo.
+  { tecnico1 => 500, tecnico2 => 520, tecnico3 => 480 }.each { |tecnico_demo, sueldo| tecnico_demo.update!(sueldo_base: sueldo) }
+
+  # Escalones de bono (porcentaje del sueldo base; más casos, mayor porcentaje; se paga solo el más alto alcanzado).
+  # Un técnico resuelve ~2-3 casos por día hábil (45-55 al mes): por eso 30 / 45 / 60 casos.
+  [ [ "Bronce", 30, 5 ], [ "Plata", 45, 10 ], [ "Oro", 60, 15 ] ].each do |nombre, casos, porcentaje|
+    BonusTier.find_or_create_by!(company: tecnifrio, casos_minimos: casos) { |escalon| escalon.assign_attributes(nombre: nombre, porcentaje: porcentaje) }
   end
 
   # Casos resueltos de ejemplo: mes anterior (cerrado, para registrar pagos) y mes actual (en curso).
+  #   Mes anterior: Juan 52 casos (Plata), Carlos 34 (Bronce), Lucía 24 casos pero nota 3,9 -> no participa por calificación.
+  #   Mes actual:   Juan 31 (Bronce), Carlos 28 (participa, aún sin escalón), Lucía 12 -> no participa por casos (12 de 20).
   mes_actual = Date.current.beginning_of_month.in_time_zone
   mes_anterior = (Date.current.beginning_of_month - 1.month).in_time_zone
-  notas = [ 5, 5, 4, 5, 4, 5, 3, 5, 4, 5, 5, 4 ]
+  notas = {
+    tecnico1 => [ 5, 5, 4, 5, 4, 5, 5, 4 ],  # ≈ 4,6
+    tecnico2 => [ 5, 4, 4, 5, 4, 4, 5, 4 ],  # ≈ 4,4
+    tecnico3 => [ 4, 4, 3, 4, 4, 3, 5, 4 ]   # ≈ 3,9
+  }
   historial = [
-    [ tecnico1, mes_anterior, 12, "anterior" ], [ tecnico2, mes_anterior, 7, "anterior" ], [ tecnico3, mes_anterior, 4, "anterior" ],
-    [ tecnico2, mes_actual, 5, "actual" ], [ tecnico1, mes_actual, 3, "actual" ], [ tecnico3, mes_actual, 2, "actual" ]
+    [ tecnico1, mes_anterior, 52, "anterior" ], [ tecnico2, mes_anterior, 34, "anterior" ], [ tecnico3, mes_anterior, 24, "anterior" ],
+    [ tecnico1, mes_actual, 31, "actual" ], [ tecnico2, mes_actual, 28, "actual" ], [ tecnico3, mes_actual, 12, "actual" ]
   ]
-  historial.each do |tecnico, mes, cantidad, etiqueta|
+  historial.each do |tecnico_demo, mes, cantidad, etiqueta|
     cantidad.times do |i|
-      falla = "[demo] Reparación #{i + 1} de #{tecnico.nombre_completo} (mes #{etiqueta})"
+      falla = "[demo] Reparación #{i + 1} de #{tecnico_demo.nombre_completo} (mes #{etiqueta})"
       caso = RepairCase.find_or_initialize_by(client: clientes[i % 2], falla: falla)
       next unless caso.new_record?
 
-      resuelta = mes + (i + 1).days + 9.hours
-      resuelta = Time.current - 1.hour if resuelta > Time.current
+      # Reparte los casos a lo largo del mes (y por horas) sin pasar de "ahora"
+      resuelta = mes + (i % 26).days + (9 + i / 26).hours
+      resuelta = Time.current - (cantidad - i).minutes if resuelta > Time.current
       caso.assign_attributes(
         company: tecnifrio, city: quito, direccion: "Av. 6 de Diciembre N31-120", appliance_type: equipos[i % equipos.size],
-        status: "resuelta", technician: tecnico, created_at: resuelta - 1.day, resuelta_at: resuelta,
-        calificacion: notas[(i + tecnico.id) % notas.size], feedback_at: resuelta + 3.hours,
+        status: "resuelta", technician: tecnico_demo, created_at: resuelta - 1.day, resuelta_at: resuelta,
+        calificacion: notas[tecnico_demo][i % notas[tecnico_demo].size], feedback_at: resuelta + 3.hours,
         comentario_feedback: [ "Muy buen servicio", "Puntual y amable", "Resolvió el problema", nil ][i % 4]
       )
       caso.save!

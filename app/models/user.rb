@@ -27,7 +27,10 @@ class User < ApplicationRecord
   validates :cedula, presence: true, uniqueness: true, cedula: true
   validates :role, inclusion: { in: ROLES }
   validates :password, length: { minimum: 6 }, allow_nil: true
+  # Sueldo base mensual del técnico (lo registra su empresa): es la base del bono en porcentaje.
+  validates :sueldo_base, numericality: { greater_than: 0, less_than_or_equal_to: 100_000 }, allow_nil: true
   validate :empresa_segun_rol
+  validate :sueldo_solo_para_tecnicos
 
   scope :activos, -> { where(activo: true) }
 
@@ -45,6 +48,10 @@ class User < ApplicationRecord
     self.username = username.to_s.strip.downcase.presence
     self.nombre_completo = nombre_completo.to_s.squish.presence
     self.cedula = cedula.to_s.gsub(/\s+/, "").presence
+  end
+
+  def sueldo_solo_para_tecnicos
+    errors.add(:sueldo_base, "solo aplica a usuarios con rol técnico") if sueldo_base.present? && !tecnico?
   end
 
   def empresa_segun_rol

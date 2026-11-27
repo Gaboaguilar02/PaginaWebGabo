@@ -44,7 +44,7 @@ module Empresa
     end
 
     def tier_params
-      params.require(:bonus_tier).permit(:nombre, :casos_minimos, :monto)
+      params.require(:bonus_tier).permit(:nombre, :casos_minimos, :porcentaje)
     end
   end
 end

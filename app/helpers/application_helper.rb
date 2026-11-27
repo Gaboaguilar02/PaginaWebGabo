@@ -44,6 +44,16 @@ module ApplicationHelper
     "★" * puntaje.to_i + "☆" * (5 - puntaje.to_i)
   end
 
+  # Calificación con dos decimales y coma: 4,75
+  def nota(valor)
+    valor.nil? ? "—" : number_with_precision(valor, precision: 2)
+  end
+
+  # Porcentaje sin ceros de sobra: "10 %", "7,5 %"
+  def porcentaje(valor)
+    "#{number_with_precision(valor, precision: 2, strip_insignificant_zeros: true)} %"
+  end
+
   # Posición en el ranking; los tres primeros llevan medalla de color.
   def posicion(numero)
     clase = { 1 => "oro", 2 => "plata", 3 => "bronce" }.fetch(numero, "normal")

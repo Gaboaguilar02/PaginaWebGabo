@@ -203,3 +203,13 @@ td .hint { white-space: nowrap; }
 .quotes li:last-child { border-bottom: 0; }
 .rating-sm { color: #f5a623; letter-spacing: .05em; }
 .card > form.form { margin-top: .5rem; }
+
+/* Requisitos de participación del técnico */
+.requisitos { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .75rem; }
+.requisito { display: flex; gap: .75rem; align-items: flex-start; flex: 1; min-width: 240px; padding: .75rem 1rem; border-radius: 8px; border: 1px solid var(--border); }
+.requisito.is-ok { background: #e6f4ea; border-color: #b7dfc2; }
+.requisito.is-pending { background: #fef3e0; border-color: #f3d9a6; }
+.requisito__icon { font-weight: 800; font-size: 1.1rem; }
+.requisito.is-ok .requisito__icon { color: var(--ok); }
+.requisito.is-pending .requisito__icon { color: var(--warn); }
+.bono-line { margin: .5rem 0; }

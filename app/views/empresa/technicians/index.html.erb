@@ -1,0 +1,37 @@
+<% content_for :title, "Técnicos" %>
+
+<div class="page-header">
+  <div>
+    <h1>Técnicos</h1>
+    <p class="muted">Registra el sueldo base de cada técnico: es la base sobre la que se calcula su bono en porcentaje.</p>
+  </div>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr><th>Técnico</th><th>Estado</th><th>Sueldo base</th><th>Este mes</th><th>Bono proyectado</th><th class="actions-col"></th></tr>
+    </thead>
+    <tbody>
+      <% @tecnicos.each do |tecnico| %>
+        <% fila = @ranking.fila_de(tecnico) %>
+        <tr>
+          <td><%= tecnico.nombre_completo %></td>
+          <td><%= tecnico.activo? ? badge("Activo", :ok) : badge("Inactivo", :danger) %></td>
+          <td><%= tecnico.sueldo_base ? number_to_currency(tecnico.sueldo_base) : badge("Sin registrar", :warn) %></td>
+          <td>
+            <% if fila %>
+              <%= fila.resueltos %> casos · <%= nota(fila.promedio) %> ★
+              <%= fila.participa? ? badge("Participa", :ok) : badge("No participa", :neutral) %>
+            <% else %>—<% end %>
+          </td>
+          <td><%= fila&.con_bono? ? number_to_currency(fila.bono) : "—" %></td>
+          <td class="actions"><%= link_to "Editar sueldo", edit_empresa_technician_path(tecnico), class: "btn btn--sm" %></td>
+        </tr>
+      <% end %>
+      <% if @tecnicos.empty? %>
+        <tr><td colspan="6" class="muted">Tu empresa aún no tiene técnicos. El administrador puede crearlos desde Usuarios.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

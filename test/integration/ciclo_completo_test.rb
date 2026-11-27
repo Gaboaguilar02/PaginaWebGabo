@@ -6,7 +6,7 @@ class CicloCompletoTest < ActionDispatch::IntegrationTest
   test "una solicitud recorre todo el ciclo y alimenta el ranking y la reputación" do
     empresa = companies(:tecnifrio)
     # Con 1 caso resuelto en el mes ya se alcanza el primer escalón.
-    BonusTier.create!(company: empresa, nombre: "Inicial", casos_minimos: 1, monto: 10)
+    BonusTier.create!(company: empresa, nombre: "Inicial", casos_minimos: 1, porcentaje: 10)
 
     # 1. El cliente pide el servicio
     login_as users(:cliente)

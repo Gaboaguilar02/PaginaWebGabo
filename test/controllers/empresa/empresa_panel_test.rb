@@ -4,7 +4,7 @@ require "test_helper"
 class Empresa::AccessControlTest < ActionDispatch::IntegrationTest
   RUTAS = %i[
     empresa_root_path empresa_repair_cases_path empresa_ranking_path empresa_bonus_tiers_path
-    new_empresa_bonus_tier_path empresa_bonus_payments_path
+    new_empresa_bonus_tier_path empresa_bonus_payments_path empresa_technicians_path
   ].freeze
 
   test "sin sesión todo el panel redirige al login" do
@@ -18,7 +18,7 @@ class Empresa::AccessControlTest < ActionDispatch::IntegrationTest
     patch aceptar_empresa_repair_case_path(repair_cases(:solicitada))
     assert_redirected_to login_url
     assert_no_difference([ "BonusTier.count", "BonusPayment.count" ]) do
-      post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "X", casos_minimos: 1, monto: 1 } }
+      post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "X", casos_minimos: 1, porcentaje: 1 } }
       post empresa_bonus_payments_path, params: { technician_id: users(:tecnico).id }
     end
   end
@@ -223,7 +223,7 @@ class Empresa::BonusTiersTest < ActionDispatch::IntegrationTest
 
   test "crea un escalón" do
     assert_difference "@empresa.bonus_tiers.count", 1 do
-      post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "Bronce", casos_minimos: 5, monto: 30 } }
+      post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "Bronce", casos_minimos: 5, porcentaje: 5 } }
     end
     assert_redirected_to empresa_bonus_tiers_path
   end
@@ -231,18 +231,18 @@ class Empresa::BonusTiersTest < ActionDispatch::IntegrationTest
   test "rechaza escalones inválidos o incoherentes" do
     crear_escalones(@empresa)
     assert_no_difference "BonusTier.count" do
-      post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "Raro", casos_minimos: 12, monto: 10 } }
+      post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "Raro", casos_minimos: 12, porcentaje: 3 } }
       assert_response :unprocessable_entity
-      post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "", casos_minimos: 0, monto: -1 } }
+      post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "", casos_minimos: 0, porcentaje: -1 } }
       assert_response :unprocessable_entity
     end
   end
 
   test "edita y elimina un escalón" do
     bronce = crear_escalones(@empresa).first
-    patch empresa_bonus_tier_path(bronce), params: { bonus_tier: { monto: 35 } }
+    patch empresa_bonus_tier_path(bronce), params: { bonus_tier: { porcentaje: 6 } }
     assert_redirected_to empresa_bonus_tiers_path
-    assert_equal 35, bronce.reload.monto
+    assert_equal 6, bronce.reload.porcentaje
 
     assert_difference "BonusTier.count", -1 do
       delete empresa_bonus_tier_path(bronce)
@@ -250,14 +250,14 @@ class Empresa::BonusTiersTest < ActionDispatch::IntegrationTest
   end
 
   test "no puede tocar los escalones de otra empresa ni asignarse otra empresa por parámetro" do
-    ajeno = BonusTier.create!(company: companies(:hogarfix), nombre: "Ajeno", casos_minimos: 3, monto: 10)
+    ajeno = BonusTier.create!(company: companies(:hogarfix), nombre: "Ajeno", casos_minimos: 3, porcentaje: 10)
     get edit_empresa_bonus_tier_path(ajeno)
     assert_response :not_found
     delete empresa_bonus_tier_path(ajeno)
     assert_response :not_found
     assert BonusTier.exists?(ajeno.id)
 
-    post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "Mio", casos_minimos: 7, monto: 20, company_id: companies(:hogarfix).id } }
+    post empresa_bonus_tiers_path, params: { bonus_tier: { nombre: "Mio", casos_minimos: 7, porcentaje: 20, company_id: companies(:hogarfix).id } }
     assert_equal @empresa, BonusTier.find_by!(nombre: "Mio").company
   end
 
@@ -283,7 +283,7 @@ class Empresa::BonusPaymentsTest < ActionDispatch::IntegrationTest
     end
     pago = BonusPayment.last
     assert_equal "Plata", pago.tier_nombre
-    assert_equal 60, pago.monto
+    assert_equal 50, pago.monto # 10 % de $500
     assert_equal users(:empresa), pago.registrado_por
     assert_redirected_to empresa_ranking_path(mes: mes_anterior.strftime("%Y-%m"))
   end
@@ -314,5 +314,135 @@ class Empresa::BonusPaymentsTest < ActionDispatch::IntegrationTest
     get empresa_bonus_payments_path
     assert_response :success
     assert_select "td", text: "Juan Pérez"
+  end
+end
+
+class Empresa::RequisitosTest < ActionDispatch::IntegrationTest
+  setup { login_as users(:empresa) }
+
+  test "la empresa ajusta la nota mínima y los casos mínimos" do
+    patch empresa_requisitos_path, params: { company: { min_calificacion: 4.5, min_casos_participar: 25 } }
+    assert_redirected_to empresa_bonus_tiers_path
+    empresa = companies(:tecnifrio).reload
+    assert_equal 4.5, empresa.min_calificacion.to_f
+    assert_equal 25, empresa.min_casos_participar
+  end
+
+  test "rechaza valores fuera de rango" do
+    patch empresa_requisitos_path, params: { company: { min_calificacion: 9, min_casos_participar: 0 } }
+    assert_equal 4.2, companies(:tecnifrio).reload.min_calificacion.to_f
+    assert flash[:alert].present?
+  end
+
+  test "solo cambia los requisitos de su propia empresa" do
+    patch empresa_requisitos_path, params: { company: { min_calificacion: 3, id: companies(:hogarfix).id, company_id: companies(:hogarfix).id, status: "suspendida" } }
+    assert_equal 4.2, companies(:hogarfix).reload.min_calificacion.to_f
+    assert_equal "activa", companies(:tecnifrio).reload.status, "no puede cambiar su propio estado"
+  end
+
+  test "la página de bonos muestra los requisitos actuales" do
+    get empresa_bonus_tiers_path
+    assert_select "input[name='company[min_calificacion]']"
+    assert_select "input[name='company[min_casos_participar]']"
+  end
+
+  test "un técnico o un cliente no pueden cambiar los requisitos" do
+    delete logout_path
+    login_as users(:tecnico)
+    patch empresa_requisitos_path, params: { company: { min_calificacion: 1 } }
+    assert_redirected_to root_url
+    assert_equal 4.2, companies(:tecnifrio).reload.min_calificacion.to_f
+  end
+end
+
+class Empresa::TechniciansTest < ActionDispatch::IntegrationTest
+  setup { login_as users(:empresa) }
+
+  test "lista a los técnicos de la empresa con su sueldo base" do
+    get empresa_technicians_path
+    assert_response :success
+    assert_select "td", text: "Juan Pérez"
+    assert_select "td", text: "Carlos Mena"
+    assert_select "td", text: "Marta Ruiz", count: 0 # no es técnico
+  end
+
+  test "registra el sueldo base de un técnico" do
+    patch empresa_technician_path(users(:tecnico)), params: { user: { sueldo_base: "650.50" } }
+    assert_redirected_to empresa_technicians_path
+    assert_equal 650.5, users(:tecnico).reload.sueldo_base.to_f
+  end
+
+  test "rechaza un sueldo inválido" do
+    patch empresa_technician_path(users(:tecnico)), params: { user: { sueldo_base: "-5" } }
+    assert_response :unprocessable_entity
+    assert_equal 500, users(:tecnico).reload.sueldo_base
+  end
+
+  test "la empresa solo puede cambiar el sueldo, nunca el rol, la cédula ni la contraseña" do
+    patch empresa_technician_path(users(:tecnico)), params: { user: { sueldo_base: 700, role: "admin", cedula: "1700000019", password: "hackeado1", activo: false } }
+    tecnico = users(:tecnico).reload
+    assert_equal 700, tecnico.sueldo_base
+    assert_equal "tecnico", tecnico.role
+    assert_equal "0100000025", tecnico.cedula
+    assert tecnico.activo?
+    assert tecnico.authenticate(LoginHelper::PASSWORD_DE_PRUEBA)
+  end
+
+  test "no puede ver ni editar técnicos de otra empresa ni a usuarios que no son técnicos" do
+    otro = User.create!(username: "tecnico.ajeno", nombre_completo: "Ajeno Otra", cedula: "0400000014", role: "tecnico",
+                        company: companies(:hogarfix), password: "password123")
+    get edit_empresa_technician_path(otro)
+    assert_response :not_found
+    patch empresa_technician_path(otro), params: { user: { sueldo_base: 999 } }
+    assert_response :not_found
+    assert_nil otro.reload.sueldo_base
+
+    patch empresa_technician_path(users(:cliente)), params: { user: { sueldo_base: 999 } }
+    assert_response :not_found
+  end
+end
+
+class Empresa::RankingRequisitosTest < ActionDispatch::IntegrationTest
+  setup do
+    login_as users(:empresa)
+    crear_escalones(companies(:tecnifrio))
+  end
+
+  test "el ranking separa a quienes participan de quienes no, con el motivo" do
+    resolver_casos(users(:tecnico), mes_anterior, 12, calificacion: 5)
+    resolver_casos(users(:tecnico_carlos), mes_anterior, 12, calificacion: 3)
+
+    get empresa_ranking_path(mes: mes_anterior.strftime("%Y-%m"))
+    assert_response :success
+    assert_select "h2", text: "Participan en el ranking"
+    assert_select "h2", text: "No participan este mes"
+    assert_match "Calificación 3,00 menor a 4,20", response.body
+    assert_equal 1, css_select(".pos").size
+    assert_select "input[type=submit][value='Registrar pago']", 1
+  end
+
+  test "sin sueldo base ofrece definirlo en lugar de registrar el pago" do
+    users(:tecnico).update!(sueldo_base: nil)
+    resolver_casos(users(:tecnico), mes_anterior, 6)
+
+    get empresa_ranking_path(mes: mes_anterior.strftime("%Y-%m"))
+    assert_select "a", text: "Definir sueldo base"
+    assert_select "input[type=submit][value='Registrar pago']", 0
+  end
+
+  test "no registra el pago de un técnico que no cumple los requisitos" do
+    resolver_casos(users(:tecnico), mes_anterior, 12, calificacion: 3)
+    assert_no_difference "BonusPayment.count" do
+      post empresa_bonus_payments_path, params: { technician_id: users(:tecnico).id, mes: mes_anterior.strftime("%Y-%m") }
+    end
+    assert_match(/no cumple los requisitos/, flash[:alert])
+  end
+
+  test "el pago muestra el cálculo: porcentaje, sueldo base y monto" do
+    resolver_casos(users(:tecnico), mes_anterior, 11)
+    post empresa_bonus_payments_path, params: { technician_id: users(:tecnico).id, mes: mes_anterior.strftime("%Y-%m") }
+    get empresa_bonus_payments_path
+    assert_match "10 % de $500,00", response.body
+    assert_match "$50,00", response.body
   end
 end
