@@ -5,7 +5,7 @@
     <h1><%= @company.nombre %></h1>
     <p class="muted">Panel de la empresa · desempeño de tus técnicos en <strong><%= l periodo, format: "%B %Y" %></strong></p>
   </div>
-  <%= render "empresa/shared/filtro_mes", ruta: empresa_root_path %>
+  <%= render "shared/filtro_mes", ruta: empresa_root_path %>
 </div>
 
 <% unless @company.activa? %>

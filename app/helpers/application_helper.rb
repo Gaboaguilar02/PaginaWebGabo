@@ -1,7 +1,7 @@
 module ApplicationHelper
   # Enlace del menú superior; se marca como activo si la URL actual cae dentro de esa sección.
   def nav_link(texto, ruta, activo: nil)
-    activo = ([ admin_root_path, empresa_root_path ].include?(ruta) ? request.path == ruta : request.path.start_with?(ruta)) if activo.nil?
+    activo = ([ admin_root_path, empresa_root_path, tecnico_root_path ].include?(ruta) ? request.path == ruta : request.path.start_with?(ruta)) if activo.nil?
     link_to texto, ruta, class: [ "topnav__link", ("is-active" if activo) ]
   end
 

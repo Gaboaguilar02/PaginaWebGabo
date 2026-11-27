@@ -67,18 +67,7 @@
   </div>
 </div>
 
-<% if @repair_case.evidencias.attached? %>
-  <div class="card">
-    <h2>Evidencias</h2>
-    <div class="gallery">
-      <% @repair_case.evidencias.each do |evidencia| %>
-        <%= link_to url_for(evidencia), target: "_blank", rel: "noopener" do %>
-          <%= image_tag url_for(evidencia), alt: "Evidencia del daño", class: "gallery__img" %>
-        <% end %>
-      <% end %>
-    </div>
-  </div>
-<% end %>
+<%= render "shared/evidencias", repair_case: @repair_case %>
 
 <% if @repair_case.calificado? %>
   <div class="card">

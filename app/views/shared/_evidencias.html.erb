@@ -1,0 +1,31 @@
+<%# Evidencias del caso: fotos del cliente (el daño) y fotos e informe del técnico (el trabajo). Parámetro local: repair_case. %>
+<% if repair_case.evidencias.attached? %>
+  <div class="card">
+    <h2>Fotos del daño (cliente)</h2>
+    <div class="gallery">
+      <% repair_case.evidencias.each do |evidencia| %>
+        <%= link_to url_for(evidencia), target: "_blank", rel: "noopener" do %>
+          <%= image_tag url_for(evidencia), alt: "Foto del daño", class: "gallery__img" %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if repair_case.informe_tecnico.present? || repair_case.evidencias_tecnico.attached? %>
+  <div class="card">
+    <h2>Trabajo del técnico</h2>
+    <% if repair_case.informe_tecnico.present? %>
+      <p class="report"><strong>Informe:</strong> <%= repair_case.informe_tecnico %></p>
+    <% end %>
+    <% if repair_case.evidencias_tecnico.attached? %>
+      <div class="gallery">
+        <% repair_case.evidencias_tecnico.each do |evidencia| %>
+          <%= link_to url_for(evidencia), target: "_blank", rel: "noopener" do %>
+            <%= image_tag url_for(evidencia), alt: "Evidencia del trabajo", class: "gallery__img" %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

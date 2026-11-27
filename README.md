@@ -147,7 +147,7 @@ Al editar, el servidor ya entrega la provincia y la ciudad preseleccionadas (fun
 | `admin` | `/admin/*` y productos |
 | `cliente` | `/cliente/*`: solicitar servicio, seguir el avance de sus casos (línea de tiempo), cancelar y calificar al técnico |
 | `empresa` | `/empresa/*`: panel con indicadores, solicitudes (aceptar, rechazar con motivo, asignar técnico), **ranking mensual de técnicos**, **escalones de bono** y registro de pagos |
-| `tecnico` | Productos (su panel llega en el desarrollo del core) |
+| `tecnico` | `/tecnico/*`: sus casos asignados, avance del servicio (salir → iniciar reparación → resolver con informe), evidencias del trabajo y **desempeño**: posición en el ranking, escalón de bono y pagos recibidos |
 
 | Ruta | Descripción |
 |------|-------------|
@@ -208,8 +208,8 @@ Ver [docs/DEPLOY.md](docs/DEPLOY.md) (Render con Docker, usando el `Dockerfile` 
 Este módulo deja listos los datos maestros. Lo que sigue del **core**:
 - ✅ Perspectiva del **cliente**: solicitud de servicio con evidencias (fotos), estados, cancelación y feedback (calificación 1–5) que actualiza la reputación de la empresa.
 - ✅ Panel de la **empresa**: aceptar/rechazar y asignar técnico, ranking mensual de técnicos por casos resueltos (desempata la calificación del cliente), escalones de bono definidos por la empresa (se paga solo el escalón más alto alcanzado) y registro del pago por mes cerrado (solo constancia, no mueve dinero).
-- Panel del **técnico**: ver sus casos asignados, avanzar estados (en camino → en reparación → resuelto), subir evidencias y ver su posición en el ranking.
-- Panel de administración con indicadores del core (casos, ranking global).
+- ✅ Panel del **técnico**: casos asignados, avance de estados con informe de cierre, evidencias del trabajo y desempeño (posición, escalón de bono, pagos).
+- Panel de administración con indicadores del core (casos y ranking global por empresa).
 
 ## Seguridad
 - Contraseñas con **bcrypt** (`has_secure_password`)

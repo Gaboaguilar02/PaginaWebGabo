@@ -17,6 +17,8 @@ class RepairCase < ApplicationRecord
   CERRADOS = %w[ resuelta cancelada rechazada ].freeze
   CANCELABLES = %w[ solicitada aceptada ].freeze
 
+  EN_ATENCION = %w[ asignada en_camino en_reparacion ].freeze
+  MAX_EVIDENCIAS_TECNICO = 6
   MAX_EVIDENCIAS = 4
   MAX_TAMANO_EVIDENCIA = 5.megabytes
 
@@ -26,7 +28,8 @@ class RepairCase < ApplicationRecord
   belongs_to :appliance_type
   belongs_to :city
 
-  has_many_attached :evidencias
+  has_many_attached :evidencias          # fotos del daño que sube el cliente al pedir el servicio
+  has_many_attached :evidencias_tecnico  # fotos del trabajo que sube el técnico durante la reparación
 
   before_validation :normalizar_campos
 
@@ -38,6 +41,7 @@ class RepairCase < ApplicationRecord
   validate :cliente_valido
   validate :empresa_puede_atender
   validates :motivo_rechazo, length: { maximum: 200 }
+  validates :informe_tecnico, length: { maximum: 500 }
   validate :tecnico_de_la_empresa
   validate :tecnico_requerido_desde_asignacion
   validate :feedback_solo_si_resuelta
@@ -113,6 +117,35 @@ class RepairCase < ApplicationRecord
     update(technician: tecnico, status: "asignada")
   end
 
+  # ---- Acciones del técnico ---------------------------------------------------
+
+  def en_atencion?
+    EN_ATENCION.include?(status)
+  end
+
+  # asignada -> en camino
+  def salir!
+    avanzar!("asignada", "en_camino")
+  end
+
+  # en camino -> en reparación
+  def iniciar_reparacion!
+    avanzar!("en_camino", "en_reparacion")
+  end
+
+  # en reparación -> resuelta. El técnico debe dejar un informe de lo que hizo; este cierre es lo que cuenta para el ranking.
+  def resolver!(informe)
+    return false unless status == "en_reparacion"
+
+    informe = informe.to_s.squish
+    if informe.length < 10
+      errors.add(:informe_tecnico, "debe describir la reparación (mínimo 10 caracteres)")
+      return false
+    end
+
+    update(status: "resuelta", informe_tecnico: informe, resuelta_at: Time.current)
+  end
+
   # Registra el feedback del cliente y actualiza la reputación de la empresa.
   def calificar!(puntaje, comentario)
     return false unless puede_calificar?
@@ -127,6 +160,12 @@ class RepairCase < ApplicationRecord
   end
 
   private
+
+  def avanzar!(desde, hacia)
+    return false unless status == desde
+
+    update(status: hacia)
+  end
 
   def normalizar_campos
     self.falla = falla.to_s.squish.presence
@@ -170,12 +209,18 @@ class RepairCase < ApplicationRecord
   end
 
   def evidencias_validas
-    return unless evidencias.attached?
+    validar_imagenes(:evidencias, MAX_EVIDENCIAS)
+    validar_imagenes(:evidencias_tecnico, MAX_EVIDENCIAS_TECNICO)
+  end
 
-    errors.add(:evidencias, "admite máximo #{MAX_EVIDENCIAS} imágenes") if evidencias.size > MAX_EVIDENCIAS
-    evidencias.each do |evidencia|
-      errors.add(:evidencias, "solo admite imágenes (JPG, PNG o WEBP)") unless evidencia.blob.content_type.in?(%w[ image/jpeg image/png image/webp ])
-      errors.add(:evidencias, "no puede pesar más de 5 MB por imagen") if evidencia.blob.byte_size > MAX_TAMANO_EVIDENCIA
+  def validar_imagenes(nombre, maximo)
+    adjuntos = public_send(nombre)
+    return unless adjuntos.attached?
+
+    errors.add(nombre, "admite máximo #{maximo} imágenes") if adjuntos.size > maximo
+    adjuntos.each do |adjunto|
+      errors.add(nombre, "solo admite imágenes (JPG, PNG o WEBP)") unless adjunto.blob.content_type.in?(%w[ image/jpeg image/png image/webp ])
+      errors.add(nombre, "no puede pesar más de 5 MB por imagen") if adjunto.blob.byte_size > MAX_TAMANO_EVIDENCIA
     end
   end
 end

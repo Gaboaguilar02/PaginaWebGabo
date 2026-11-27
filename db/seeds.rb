@@ -171,6 +171,16 @@ unless ENV["SEED_DEMO"] == "false"
     caso.save!
   end
 
+  # Un caso ya asignado a Juan: listo para que el técnico lo recorra (salir -> iniciar -> resolver) en la demo.
+  falla_asignada = "El refrigerador congela los alimentos de la parte superior y hace ruido."
+  unless RepairCase.exists?(client: clientes[0], falla: falla_asignada)
+    RepairCase.create!(client: clientes[0], company: tecnifrio, city: quito, direccion: "Av. Eloy Alfaro N35-12", appliance_type: ApplianceType.find_by!(nombre: "Refrigerador"),
+                       falla: falla_asignada, status: "asignada", technician: tecnico1, created_at: 3.hours.ago)
+  end
+
+  # Informe del técnico en los casos resueltos de ejemplo
+  RepairCase.resueltos.where(informe_tecnico: nil).update_all(informe_tecnico: "Se diagnosticó la falla, se reparó y se probó el equipo junto al cliente.")
+
   # Un pago ya registrado del mes anterior (Plata para Juan); el de Carlos (Bronce) queda pendiente para mostrar cómo se registra.
   if BonusPayment.where(company: tecnifrio, technician: tecnico1, periodo: mes_anterior.to_date).none?
     BonusPayment.registrar(company: tecnifrio, technician: tecnico1, periodo: mes_anterior.to_date, por: User.find_by!(username: "empresa1"),

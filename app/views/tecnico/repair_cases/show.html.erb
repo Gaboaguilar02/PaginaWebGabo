@@ -1,0 +1,93 @@
+<% content_for :title, "Caso ##{@repair_case.id}" %>
+
+<div class="page-header">
+  <div>
+    <h1>Caso #<%= @repair_case.id %> · <%= @repair_case.appliance_type.nombre %> <%= badge_estado_caso(@repair_case) %></h1>
+    <p class="muted">Asignado por <%= @company.nombre %></p>
+  </div>
+  <%= link_to "Volver", tecnico_repair_cases_path, class: "btn" %>
+</div>
+
+<% case @repair_case.status %>
+<% when "asignada" %>
+  <div class="card">
+    <h2>Siguiente paso</h2>
+    <p class="muted">Cuando salgas hacia el domicilio del cliente, avisa para que él pueda seguirte.</p>
+    <%= button_to "Salir hacia el domicilio", salir_tecnico_repair_case_path(@repair_case), method: :patch, class: "btn btn--primary" %>
+  </div>
+<% when "en_camino" %>
+  <div class="card">
+    <h2>Siguiente paso</h2>
+    <p class="muted">Al llegar y revisar el equipo, inicia la reparación.</p>
+    <%= button_to "Llegué: iniciar reparación", iniciar_tecnico_repair_case_path(@repair_case), method: :patch, class: "btn btn--primary" %>
+  </div>
+<% when "en_reparacion" %>
+  <div class="card">
+    <h2>Cerrar el caso</h2>
+    <p class="muted">Describe qué encontraste y qué hiciste. Al resolverlo suma a tu ranking del mes y el cliente podrá calificarte.</p>
+    <%= form_with url: resolver_tecnico_repair_case_path(@repair_case), method: :patch, class: "form",
+                  data: { turbo_confirm: "¿Marcar este caso como resuelto? No se puede deshacer." } do %>
+      <div class="field">
+        <%= label_tag :informe_tecnico, "Informe de la reparación" %>
+        <%= text_area_tag :informe_tecnico, @repair_case.informe_tecnico, rows: 4, required: true, minlength: 10, maxlength: 500,
+                          placeholder: "Ej.: Se cambió la bomba de desagüe y se limpió el filtro. Se probó un ciclo completo sin fugas." %>
+      </div>
+      <%= submit_tag "Marcar como resuelto", class: "btn btn--primary" %>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @repair_case.en_atencion? %>
+  <div class="card">
+    <h2>Subir evidencias del trabajo</h2>
+    <%= form_with url: evidencias_tecnico_repair_case_path(@repair_case), method: :post, multipart: true, class: "form inline-form" do %>
+      <div class="field">
+        <%= label_tag :evidencias, "Fotos (antes, después, repuestos)" %>
+        <%= file_field_tag :evidencias, multiple: true, accept: "image/jpeg,image/png,image/webp", required: true %>
+        <small class="hint">Hasta <%= RepairCase::MAX_EVIDENCIAS_TECNICO %> imágenes JPG, PNG o WEBP de máximo 5 MB cada una.</small>
+      </div>
+      <%= submit_tag "Subir fotos", class: "btn" %>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="card">
+  <h2>Avance del servicio</h2>
+  <%= render "shared/timeline", repair_case: @repair_case %>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h2>Qué hay que reparar</h2>
+    <dl class="details">
+      <dt>Problema</dt><dd><%= simple_format(h(@repair_case.falla)) %></dd>
+      <dt>Equipo</dt><dd><%= @repair_case.appliance_type.nombre %></dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Dónde y para quién</h2>
+    <dl class="details">
+      <dt>Cliente</dt><dd><%= @repair_case.client.nombre_completo %></dd>
+      <dt>Dirección</dt><dd><%= @repair_case.direccion %></dd>
+      <dt>Ciudad</dt><dd><%= @repair_case.city.nombre %>, <%= @repair_case.city.province.nombre %></dd>
+      <% if @repair_case.resuelta_at %>
+        <dt>Resuelto el</dt><dd><%= l @repair_case.resuelta_at.to_date, format: :long %></dd>
+      <% end %>
+    </dl>
+  </div>
+</div>
+
+<%= render "shared/evidencias", repair_case: @repair_case %>
+
+<% if @repair_case.calificado? %>
+  <div class="card">
+    <h2>Calificación del cliente</h2>
+    <p class="rating"><%= estrellas(@repair_case.calificacion) %> <span class="muted"><%= @repair_case.calificacion %> de 5</span></p>
+    <% if @repair_case.comentario_feedback.present? %>
+      <p>“<%= @repair_case.comentario_feedback %>”</p>
+    <% end %>
+  </div>
+<% elsif @repair_case.status == "resuelta" %>
+  <div class="card"><p class="muted">El cliente todavía no califica este servicio.</p></div>
+<% end %>

@@ -1,0 +1,41 @@
+<% content_for :title, "Mis casos" %>
+
+<div class="page-header">
+  <div>
+    <h1>Mis casos</h1>
+    <p class="muted">Los servicios que tu empresa te asignó, del más reciente al más antiguo.</p>
+  </div>
+</div>
+
+<div class="tabs">
+  <%= link_to "Todos (#{@conteos.values.sum})", tecnico_repair_cases_path, class: [ "tabs__item", ("is-active" if @filtro.nil?) ] %>
+  <% Tecnico::RepairCasesController::FILTROS.each do |clave, texto| %>
+    <% cantidad = Tecnico::RepairCasesController::ESTADOS_POR_FILTRO[clave].sum { |estado| @conteos.fetch(estado, 0) } %>
+    <%= link_to "#{texto} (#{cantidad})", tecnico_repair_cases_path(filtro: clave), class: [ "tabs__item", ("is-active" if @filtro == clave) ] %>
+  <% end %>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr><th>N.º</th><th>Equipo</th><th>Cliente</th><th>Ciudad</th><th>Estado</th><th>Calificación</th><th>Actualizado</th><th class="actions-col"></th></tr>
+    </thead>
+    <tbody>
+      <% @repair_cases.each do |caso| %>
+        <tr>
+          <td><%= link_to "##{caso.id}", tecnico_repair_case_path(caso) %></td>
+          <td><%= caso.appliance_type.nombre %></td>
+          <td><%= caso.client.nombre_completo %></td>
+          <td><%= caso.city.nombre %></td>
+          <td><%= badge_estado_caso(caso) %></td>
+          <td><%= caso.calificado? ? "#{estrellas(caso.calificacion)}" : "—" %></td>
+          <td><%= l caso.updated_at.to_date, format: :short %></td>
+          <td class="actions"><%= link_to "Abrir", tecnico_repair_case_path(caso), class: "btn btn--sm" %></td>
+        </tr>
+      <% end %>
+      <% if @repair_cases.empty? %>
+        <tr><td colspan="8" class="muted">No hay casos en esta categoría.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

@@ -52,6 +52,22 @@ Rails.application.routes.draw do
     resources :bonus_payments, path: "pagos", only: %i[ index create ]
   end
 
+  # Panel del técnico: sus casos asignados, avance del servicio y su desempeño en el ranking (solo rol técnico)
+  namespace :tecnico do
+    root "dashboard#index"
+
+    resources :repair_cases, path: "casos", only: %i[ index show ] do
+      member do
+        patch :salir
+        patch :iniciar
+        patch :resolver
+        post :evidencias
+      end
+    end
+
+    get "desempeno", to: "desempeno#index", as: :desempeno
+  end
+
   resources :products
   root "products#index"
 

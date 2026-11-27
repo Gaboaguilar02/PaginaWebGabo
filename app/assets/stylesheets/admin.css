@@ -188,3 +188,15 @@ td.actions { justify-content: flex-end; }
 .inline-form .field { flex: 1; min-width: 240px; margin-bottom: 0; }
 .filter label { font-size: .85rem; font-weight: 600; }
 td .hint { white-space: nowrap; }
+
+/* Panel del técnico */
+.progress { height: 10px; background: #eef1f5; border-radius: 999px; overflow: hidden; margin: .5rem 0; max-width: 480px; }
+.progress__fill { display: block; height: 100%; background: var(--ok); border-radius: 999px; }
+.report { background: #f4f6f9; border-left: 3px solid var(--primary); padding: .6rem .9rem; border-radius: 0 8px 8px 0; margin: 0 0 .75rem; }
+.row--me td { background: #f0f6ff; }
+.tier--mine { outline: 2px solid var(--ok); }
+.quotes { list-style: none; margin: 0; padding: 0 1.25rem 1rem; }
+.quotes li { padding: .6rem 0; border-bottom: 1px solid var(--border); }
+.quotes li:last-child { border-bottom: 0; }
+.rating-sm { color: #f5a623; letter-spacing: .05em; }
+.card > form.form { margin-top: .5rem; }

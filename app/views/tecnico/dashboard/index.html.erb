@@ -1,0 +1,80 @@
+<% content_for :title, "Mi panel" %>
+
+<div class="page-header">
+  <div>
+    <h1>Hola, <%= current_user.nombre_completo.split.first %></h1>
+    <p class="muted"><%= @company.nombre %> · tu trabajo y tu avance en <strong><%= l periodo, format: "%B %Y" %></strong></p>
+  </div>
+  <%= render "shared/filtro_mes", ruta: tecnico_root_path %>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat__label">Por atender</span>
+    <span class="stat__value"><%= @por_atender %></span>
+    <span class="stat__hint"><%= link_to "Ver casos asignados", tecnico_repair_cases_path(filtro: "por_atender") %></span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">En curso</span>
+    <span class="stat__value"><%= @en_curso %></span>
+    <span class="stat__hint">En camino o en reparación</span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Resueltos en el mes</span>
+    <span class="stat__value"><%= @mi_fila&.resueltos.to_i %></span>
+    <span class="stat__hint"><%= @pendientes_de_calificar %> esperan calificación del cliente</span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Mi posición</span>
+    <span class="stat__value"><%= @mi_fila ? "##{@mi_fila.posicion}" : "—" %></span>
+    <span class="stat__hint">de <%= @ranking.filas.size %> técnicos · <%= link_to "Ver ranking", tecnico_desempeno_path(mes: periodo.strftime("%Y-%m")) %></span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Mi calificación</span>
+    <span class="stat__value"><%= @mi_fila&.promedio ? "#{@mi_fila.promedio} ★" : "—" %></span>
+    <span class="stat__hint">Promedio de tus clientes en el mes</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Mi bono de <%= l periodo, format: "%B" %></h2>
+  <% resueltos = @mi_fila&.resueltos.to_i %>
+  <% if @mi_fila&.tier %>
+    <p>Escalón alcanzado: <%= badge(@mi_fila.tier.nombre, :ok) %> <strong><%= number_to_currency(@mi_fila.bono) %></strong>
+      <% if @mi_fila.pagado? %><%= badge("Pagado", :ok) %><% elsif !@ranking.cerrado? %><span class="hint">(proyectado: el mes sigue abierto)</span><% end %></p>
+  <% else %>
+    <p class="muted">Todavía no alcanzas ningún escalón este mes.</p>
+  <% end %>
+  <% if @siguiente_escalon && !@ranking.cerrado? %>
+    <% faltan = @siguiente_escalon.casos_minimos - resueltos %>
+    <div class="progress"><span class="progress__fill" style="width: <%= [ resueltos * 100 / @siguiente_escalon.casos_minimos, 100 ].min %>%"></span></div>
+    <p class="hint">Te <%= faltan == 1 ? "falta 1 caso" : "faltan #{faltan} casos" %> para el escalón <strong><%= @siguiente_escalon.nombre %></strong> (<%= number_to_currency(@siguiente_escalon.monto) %>).</p>
+  <% elsif @company.bonus_tiers.none? %>
+    <p class="hint">Tu empresa aún no definió escalones de bono.</p>
+  <% end %>
+</div>
+
+<div class="card card--flush">
+  <h2 class="card__title">Casos en atención</h2>
+  <table class="table">
+    <thead><tr><th>N.º</th><th>Equipo</th><th>Cliente</th><th>Dirección</th><th>Estado</th><th class="actions-col">Siguiente paso</th></tr></thead>
+    <tbody>
+      <% @activos.each do |caso| %>
+        <tr>
+          <td><%= link_to "##{caso.id}", tecnico_repair_case_path(caso) %></td>
+          <td><%= caso.appliance_type.nombre %></td>
+          <td><%= caso.client.nombre_completo %></td>
+          <td><%= caso.direccion %>, <%= caso.city.nombre %></td>
+          <td><%= badge_estado_caso(caso) %></td>
+          <td class="actions">
+            <% accion = { "asignada" => "Salir al domicilio", "en_camino" => "Iniciar reparación", "en_reparacion" => "Marcar resuelto" }[caso.status] %>
+            <%= link_to accion, tecnico_repair_case_path(caso), class: "btn btn--primary btn--sm" %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @activos.empty? %>
+        <tr><td colspan="6" class="muted">No tienes casos en atención. Cuando tu empresa te asigne uno aparecerá aquí.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

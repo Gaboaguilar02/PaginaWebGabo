@@ -16,9 +16,14 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to cliente_root_url
   end
 
-  test "una empresa o un técnico entran a la sección de productos" do
+  test "una empresa entra a su panel" do
+    login_as users(:empresa)
+    assert_redirected_to empresa_root_url
+  end
+
+  test "un técnico entra a su panel" do
     login_as users(:tecnico)
-    assert_redirected_to products_url
+    assert_redirected_to tecnico_root_url
   end
 
   test "rechaza una contraseña incorrecta" do

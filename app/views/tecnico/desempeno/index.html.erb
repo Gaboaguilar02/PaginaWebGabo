@@ -1,0 +1,113 @@
+<% content_for :title, "Mi desempeño" %>
+
+<div class="page-header">
+  <div>
+    <h1>Mi desempeño · <%= l periodo, format: "%B %Y" %></h1>
+    <p class="muted">Tu posición entre los técnicos de <%= @company.nombre %>, tu escalón de bono y lo que dicen tus clientes.</p>
+  </div>
+  <%= render "shared/filtro_mes", ruta: tecnico_desempeno_path %>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat__label">Mi posición</span>
+    <span class="stat__value"><%= @mi_fila ? "##{@mi_fila.posicion}" : "—" %></span>
+    <span class="stat__hint">de <%= @ranking.filas.size %> técnicos</span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Casos resueltos</span>
+    <span class="stat__value"><%= @mi_fila&.resueltos.to_i %></span>
+    <span class="stat__hint">en el mes</span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Calificación</span>
+    <span class="stat__value"><%= @mi_fila&.promedio ? "#{@mi_fila.promedio} ★" : "—" %></span>
+    <span class="stat__hint"><%= pluralize(@mi_fila&.calificados.to_i, "calificación", "calificaciones") %></span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Bono del mes</span>
+    <span class="stat__value"><%= @mi_fila&.tier ? number_to_currency(@mi_fila.bono) : "—" %></span>
+    <span class="stat__hint">
+      <% if @mi_fila&.tier %>
+        Escalón <%= @mi_fila.tier.nombre %> · <%= @mi_fila.pagado? ? "pagado" : (@ranking.cerrado? ? "pendiente de pago" : "proyectado") %>
+      <% else %>
+        Sin escalón alcanzado
+      <% end %>
+    </span>
+  </div>
+</div>
+
+<% if @escalones.any? %>
+  <div class="card">
+    <h2>Escalones de bono de tu empresa</h2>
+    <ul class="tiers">
+      <% @escalones.each do |escalon| %>
+        <% alcanzado = @mi_fila&.tier && @mi_fila.tier.id == escalon.id %>
+        <li class="tier <%= "tier--mine" if alcanzado %>"><strong><%= escalon.nombre %></strong> <span>desde <%= escalon.casos_minimos %> casos</span> <b><%= number_to_currency(escalon.monto) %></b><%= " ✓" if alcanzado %></li>
+      <% end %>
+    </ul>
+    <% if @siguiente_escalon && !@ranking.cerrado? %>
+      <% faltan = @siguiente_escalon.casos_minimos - @mi_fila&.resueltos.to_i %>
+      <p class="hint">Te <%= faltan == 1 ? "falta 1 caso" : "faltan #{faltan} casos" %> para <strong><%= @siguiente_escalon.nombre %></strong>. Solo se paga el escalón más alto alcanzado.</p>
+    <% else %>
+      <p class="hint">Solo se paga el escalón más alto alcanzado; los bonos no se acumulan.</p>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="card card--flush">
+  <h2 class="card__title">Ranking de la empresa</h2>
+  <table class="table">
+    <thead><tr><th>#</th><th>Técnico</th><th class="bar-col">Casos resueltos</th><th>Calificación</th><th>Escalón</th></tr></thead>
+    <tbody>
+      <% @ranking.filas.each do |fila| %>
+        <% yo = fila.technician.id == current_user.id %>
+        <tr class="<%= "row--me" if yo %>">
+          <td><%= posicion(fila.posicion) %></td>
+          <td><%= fila.technician.nombre_completo %> <%= badge("Tú", :info) if yo %></td>
+          <td class="bar-col">
+            <div class="bar"><span class="bar__fill" style="width: <%= (fila.resueltos * 100.0 / @maximo).round %>%"></span></div>
+            <strong><%= fila.resueltos %></strong>
+          </td>
+          <td><%= fila.promedio ? "#{fila.promedio} ★" : "—" %></td>
+          <td><%= fila.tier ? badge(fila.tier.nombre, :ok) : badge("Ninguno", :neutral) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="grid-2">
+  <div class="card card--flush">
+    <h2 class="card__title">Lo que dicen mis clientes</h2>
+    <ul class="quotes">
+      <% @comentarios.each do |caso| %>
+        <li><span class="rating-sm"><%= estrellas(caso.calificacion) %></span> “<%= caso.comentario_feedback %>”
+          <span class="hint">· caso #<%= caso.id %></span></li>
+      <% end %>
+      <% if @comentarios.empty? %>
+        <li class="muted">Aún no hay comentarios en este mes.</li>
+      <% end %>
+    </ul>
+  </div>
+
+  <div class="card card--flush">
+    <h2 class="card__title">Mis bonos pagados</h2>
+    <table class="table">
+      <thead><tr><th>Período</th><th>Escalón</th><th>Casos</th><th>Monto</th></tr></thead>
+      <tbody>
+        <% @pagos.each do |pago| %>
+          <tr>
+            <td><%= l pago.periodo, format: "%B %Y" %></td>
+            <td><%= badge(pago.tier_nombre, :ok) %></td>
+            <td><%= pago.casos_resueltos %></td>
+            <td><strong><%= number_to_currency(pago.monto) %></strong></td>
+          </tr>
+        <% end %>
+        <% if @pagos.empty? %>
+          <tr><td colspan="4" class="muted">Todavía no tienes bonos registrados.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
