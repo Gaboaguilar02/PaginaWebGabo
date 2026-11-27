@@ -36,10 +36,14 @@ h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
 /* Barra superior */
 .topbar { background: #101828; color: #fff; }
 .topbar__inner {
-  max-width: 1100px; margin: 0 auto; padding: .6rem 1rem;
+  max-width: 1100px; margin: 0 auto; padding: .45rem 1rem;
   display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
 }
-.brand { color: #fff; font-weight: 700; font-size: 1.05rem; }
+.brand { color: #fff; font-weight: 700; font-size: 1.05rem; display: inline-flex; align-items: center; }
+.brand__logo { height: 48px; width: auto; display: block; }
+/* El logo tiene colores pensados para fondo oscuro: en el login va sobre un panel azul marino. */
+.login-logo { background: #101828; border-radius: 8px; padding: 1.1rem 1rem; margin-bottom: 1.25rem; text-align: center; }
+.login-logo img { width: 100%; max-width: 280px; height: auto; display: inline-block; }
 .brand:hover { text-decoration: none; }
 .topnav { display: flex; gap: .25rem; flex: 1; flex-wrap: wrap; }
 .topnav__link { color: #c9d1dc; padding: .35rem .7rem; border-radius: 6px; font-size: .9rem; }
@@ -147,7 +151,6 @@ td.actions { justify-content: flex-end; }
 .login { display: flex; justify-content: center; padding-top: 4rem; }
 .login .card { width: 100%; max-width: 380px; }
 
-.login-brand { text-align: center; font-size: 1.8rem; font-weight: 800; margin: 0 0 .25rem; color: #c0392b; }
 
 /* Línea de tiempo del caso de reparación */
 .timeline { list-style: none; display: flex; gap: .5rem; padding: 0; margin: 0; flex-wrap: wrap; }
