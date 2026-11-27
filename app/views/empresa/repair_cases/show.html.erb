@@ -1,0 +1,91 @@
+<% content_for :title, "Solicitud ##{@repair_case.id}" %>
+
+<div class="page-header">
+  <div>
+    <h1>Solicitud #<%= @repair_case.id %> · <%= @repair_case.appliance_type.nombre %> <%= badge_estado_caso(@repair_case) %></h1>
+    <p class="muted">Recibida el <%= l @repair_case.created_at.to_date, format: :long %></p>
+  </div>
+  <%= link_to "Volver", empresa_repair_cases_path, class: "btn" %>
+</div>
+
+<% if @repair_case.aceptable? || @repair_case.asignable? %>
+  <div class="card">
+    <h2>Acciones</h2>
+    <% if @repair_case.aceptable? %>
+      <div class="actions">
+        <%= button_to "Aceptar solicitud", aceptar_empresa_repair_case_path(@repair_case), method: :patch, class: "btn btn--primary" %>
+      </div>
+      <%= form_with url: rechazar_empresa_repair_case_path(@repair_case), method: :patch, class: "form inline-form",
+                    data: { turbo_confirm: "¿Rechazar esta solicitud?" } do %>
+        <div class="field">
+          <%= label_tag :motivo_rechazo, "O rechazarla indicando el motivo" %>
+          <%= text_field_tag :motivo_rechazo, nil, maxlength: 200, required: true, placeholder: "Ej.: No cubrimos esa zona de la ciudad" %>
+        </div>
+        <%= submit_tag "Rechazar", class: "btn btn--danger" %>
+      <% end %>
+    <% else %>
+      <%= form_with url: asignar_empresa_repair_case_path(@repair_case), method: :patch, class: "form inline-form" do %>
+        <div class="field">
+          <%= label_tag :technician_id, @repair_case.technician ? "Reasignar a otro técnico" : "Asignar técnico" %>
+          <%= select_tag :technician_id,
+                         options_for_select(@tecnicos.map { |t| [ "#{t.nombre_completo} · #{@carga.fetch(t.id, 0)} casos en curso", t.id ] }, @repair_case.technician_id),
+                         prompt: "Selecciona un técnico", required: true %>
+        </div>
+        <%= submit_tag(@repair_case.technician ? "Reasignar" : "Asignar técnico", class: "btn btn--primary") %>
+      <% end %>
+      <% if @tecnicos.empty? %>
+        <p class="hint">Tu empresa no tiene técnicos activos. El administrador puede crearlos desde Usuarios.</p>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="card">
+  <h2>Avance del servicio</h2>
+  <%= render "shared/timeline", repair_case: @repair_case %>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h2>Detalle de la solicitud</h2>
+    <dl class="details">
+      <dt>Problema</dt><dd><%= simple_format(h(@repair_case.falla)) %></dd>
+      <dt>Dirección</dt><dd><%= @repair_case.direccion %></dd>
+      <dt>Ciudad</dt><dd><%= @repair_case.city.nombre %>, <%= @repair_case.city.province.nombre %></dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Cliente y técnico</h2>
+    <dl class="details">
+      <dt>Cliente</dt><dd><%= @repair_case.client.nombre_completo %></dd>
+      <dt>Técnico</dt><dd><%= @repair_case.technician&.nombre_completo || "Sin asignar" %></dd>
+      <% if @repair_case.resuelta_at %>
+        <dt>Resuelto el</dt><dd><%= l @repair_case.resuelta_at.to_date, format: :long %></dd>
+      <% end %>
+    </dl>
+  </div>
+</div>
+
+<% if @repair_case.evidencias.attached? %>
+  <div class="card">
+    <h2>Evidencias</h2>
+    <div class="gallery">
+      <% @repair_case.evidencias.each do |evidencia| %>
+        <%= link_to url_for(evidencia), target: "_blank", rel: "noopener" do %>
+          <%= image_tag url_for(evidencia), alt: "Evidencia del daño", class: "gallery__img" %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @repair_case.calificado? %>
+  <div class="card">
+    <h2>Calificación del cliente</h2>
+    <p class="rating"><%= estrellas(@repair_case.calificacion) %> <span class="muted"><%= @repair_case.calificacion %> de 5</span></p>
+    <% if @repair_case.comentario_feedback.present? %>
+      <p>“<%= @repair_case.comentario_feedback %>”</p>
+    <% end %>
+  </div>
+<% end %>

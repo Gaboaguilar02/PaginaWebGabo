@@ -11,6 +11,10 @@ class User < ApplicationRecord
   has_secure_password
 
   belongs_to :company, optional: true
+  has_many :solicitudes, class_name: "RepairCase", foreign_key: :client_id, inverse_of: :client, dependent: :restrict_with_error
+  has_many :casos_asignados, class_name: "RepairCase", foreign_key: :technician_id, inverse_of: :technician, dependent: :restrict_with_error
+  has_many :bonos_recibidos, class_name: "BonusPayment", foreign_key: :technician_id, inverse_of: :technician, dependent: :restrict_with_error
+  has_many :bonos_registrados, class_name: "BonusPayment", foreign_key: :registrado_por_id, inverse_of: :registrado_por, dependent: :restrict_with_error
 
   before_validation :normalizar_campos
 

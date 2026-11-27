@@ -1,0 +1,49 @@
+<% content_for :title, "Solicitudes" %>
+
+<div class="page-header">
+  <div>
+    <h1>Solicitudes de servicio</h1>
+    <p class="muted">Acepta o rechaza lo que piden los clientes y asigna un técnico para atenderlo.</p>
+  </div>
+</div>
+
+<div class="tabs">
+  <%= link_to "Todas (#{@conteos.values.sum})", empresa_repair_cases_path, class: [ "tabs__item", ("is-active" if @filtro.nil?) ] %>
+  <% Empresa::RepairCasesController::FILTROS.each do |clave, texto| %>
+    <% cantidad = Empresa::RepairCasesController::ESTADOS_POR_FILTRO[clave].sum { |estado| @conteos.fetch(estado, 0) } %>
+    <%= link_to "#{texto} (#{cantidad})", empresa_repair_cases_path(filtro: clave), class: [ "tabs__item", ("is-active" if @filtro == clave) ] %>
+  <% end %>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr><th>N.º</th><th>Equipo</th><th>Cliente</th><th>Ciudad</th><th>Técnico</th><th>Estado</th><th>Fecha</th><th class="actions-col">Acciones</th></tr>
+    </thead>
+    <tbody>
+      <% @repair_cases.each do |caso| %>
+        <tr>
+          <td><%= link_to "##{caso.id}", empresa_repair_case_path(caso) %></td>
+          <td><%= caso.appliance_type.nombre %></td>
+          <td><%= caso.client.nombre_completo %></td>
+          <td><%= caso.city.nombre %></td>
+          <td><%= caso.technician&.nombre_completo || "—" %></td>
+          <td><%= badge_estado_caso(caso) %></td>
+          <td><%= l caso.created_at.to_date, format: :short %></td>
+          <td class="actions">
+            <% if caso.aceptable? %>
+              <%= link_to "Revisar", empresa_repair_case_path(caso), class: "btn btn--primary btn--sm" %>
+            <% elsif caso.status == "aceptada" %>
+              <%= link_to "Asignar técnico", empresa_repair_case_path(caso), class: "btn btn--primary btn--sm" %>
+            <% else %>
+              <%= link_to "Ver detalle", empresa_repair_case_path(caso), class: "btn btn--sm" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @repair_cases.empty? %>
+        <tr><td colspan="8" class="muted">No hay solicitudes en esta categoría.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

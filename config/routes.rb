@@ -19,6 +19,39 @@ Rails.application.routes.draw do
     get "lookups/cities", to: "lookups#cities", as: :lookups_cities
   end
 
+  # Perspectiva del cliente: solicitar y seguir servicios de reparación (solo rol cliente)
+  namespace :cliente do
+    root "repair_cases#index"
+
+    resources :repair_cases, path: "solicitudes", only: %i[ index new create show ] do
+      member do
+        patch :cancelar
+        patch :calificar
+      end
+    end
+
+    # Endpoints JSON de los dropdowns dependientes del formulario de solicitud
+    get "lookups/cities", to: "lookups#cities", as: :lookups_cities
+    get "lookups/companies", to: "lookups#companies", as: :lookups_companies
+  end
+
+  # Panel de la empresa: solicitudes, ranking mensual de técnicos y bonos escalonados (solo rol empresa)
+  namespace :empresa do
+    root "dashboard#index"
+
+    resources :repair_cases, path: "solicitudes", only: %i[ index show ] do
+      member do
+        patch :aceptar
+        patch :rechazar
+        patch :asignar
+      end
+    end
+
+    get "ranking", to: "rankings#index", as: :ranking
+    resources :bonus_tiers, path: "escalones", except: :show
+    resources :bonus_payments, path: "pagos", only: %i[ index create ]
+  end
+
   resources :products
   root "products#index"
 

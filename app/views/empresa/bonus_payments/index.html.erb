@@ -1,0 +1,41 @@
+<% content_for :title, "Pagos de bonos" %>
+
+<div class="page-header">
+  <div>
+    <h1>Pagos de bonos registrados</h1>
+    <p class="muted">Historial de constancias: UFix no mueve dinero, solo deja registro de lo que la empresa pagó.</p>
+  </div>
+  <%= link_to "Ir al ranking", empresa_ranking_path, class: "btn btn--primary" %>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat__label">Total pagado</span>
+    <span class="stat__value"><%= number_to_currency(@total_pagado) %></span>
+    <span class="stat__hint"><%= pluralize(@pagos.size, "pago registrado", "pagos registrados") %></span>
+  </div>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr><th>Período</th><th>Técnico</th><th>Escalón</th><th>Casos resueltos</th><th>Monto</th><th>Registrado por</th><th>Fecha</th></tr>
+    </thead>
+    <tbody>
+      <% @pagos.each do |pago| %>
+        <tr>
+          <td><%= l pago.periodo, format: "%B %Y" %></td>
+          <td><%= pago.technician.nombre_completo %></td>
+          <td><%= badge(pago.tier_nombre, :ok) %> <span class="hint">desde <%= pago.casos_minimos %></span></td>
+          <td><%= pago.casos_resueltos %></td>
+          <td><strong><%= number_to_currency(pago.monto) %></strong></td>
+          <td><%= pago.registrado_por.nombre_completo %></td>
+          <td><%= l pago.pagado_at.to_date, format: :short %></td>
+        </tr>
+      <% end %>
+      <% if @pagos.empty? %>
+        <tr><td colspan="7" class="muted">Todavía no hay pagos registrados.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

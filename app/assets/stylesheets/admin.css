@@ -146,3 +146,45 @@ td.actions { justify-content: flex-end; }
 /* Login */
 .login { display: flex; justify-content: center; padding-top: 4rem; }
 .login .card { width: 100%; max-width: 380px; }
+
+.login-brand { text-align: center; font-size: 1.8rem; font-weight: 800; margin: 0 0 .25rem; color: #c0392b; }
+
+/* Línea de tiempo del caso de reparación */
+.timeline { list-style: none; display: flex; gap: .5rem; padding: 0; margin: 0; flex-wrap: wrap; }
+.timeline__step { flex: 1; min-width: 120px; display: flex; flex-direction: column; align-items: center; gap: .4rem; text-align: center; color: var(--muted); font-size: .8rem; }
+.timeline__dot {
+  width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: #eef1f5; color: var(--muted); font-weight: 700;
+}
+.timeline__step.is-done .timeline__dot { background: var(--ok); color: #fff; }
+.timeline__step.is-current .timeline__dot { background: var(--primary); color: #fff; box-shadow: 0 0 0 4px #cfe0fb; }
+.timeline__step.is-current, .timeline__step.is-done { color: var(--text); }
+.timeline__step.is-current .timeline__label { font-weight: 700; }
+
+/* Evidencias y calificación */
+.gallery { display: flex; flex-wrap: wrap; gap: .75rem; }
+.gallery__img { width: 160px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+.rating { font-size: 1.4rem; color: #f5a623; margin: 0 0 .5rem; }
+.rating .muted { font-size: .85rem; }
+
+/* Panel de la empresa: ranking, escalones y formularios en línea */
+.pos { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; background: #eef1f5; color: var(--muted); }
+.pos--oro { background: #fdd835; color: #5d4a00; }
+.pos--plata { background: #cfd8dc; color: #37474f; }
+.pos--bronce { background: #e0a572; color: #5a3410; }
+
+.bar-col { min-width: 220px; }
+.bar { display: inline-block; vertical-align: middle; width: 140px; height: 10px; background: #eef1f5; border-radius: 999px; overflow: hidden; margin-right: .5rem; }
+.bar__fill { display: block; height: 100%; background: var(--primary); border-radius: 999px; }
+
+.tiers { list-style: none; display: flex; flex-wrap: wrap; gap: .6rem; padding: 0; margin: 0 0 .5rem; }
+.tier { display: inline-flex; gap: .5rem; align-items: baseline; background: #e6f4ea; color: #137333; padding: .35rem .8rem; border-radius: 8px; font-size: .9rem; }
+.tier span { color: var(--muted); font-size: .8rem; }
+
+.rules { margin: 0; padding-left: 1.2rem; }
+.rules li { margin-bottom: .25rem; }
+.card__foot { padding: .75rem 1.25rem; margin: 0; border-top: 1px solid var(--border); font-size: .85rem; }
+.inline-form { display: flex; align-items: flex-end; gap: .75rem; flex-wrap: wrap; margin-top: 1rem; }
+.inline-form .field { flex: 1; min-width: 240px; margin-bottom: 0; }
+.filter label { font-size: .85rem; font-weight: 600; }
+td .hint { white-space: nowrap; }

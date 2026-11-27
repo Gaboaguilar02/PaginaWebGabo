@@ -1,4 +1,4 @@
-# Página Web Gabo: Administración MVC para servicios de línea blanca
+# UFix: Administración MVC para servicios de línea blanca
 
 ![Estado](https://img.shields.io/badge/estado-en%20desarrollo-yellow)
 ![Ruby](https://img.shields.io/badge/Ruby-3.4.1-CC342D?logo=ruby&logoColor=white)
@@ -145,7 +145,9 @@ Al editar, el servidor ya entrega la provincia y la ciudad preseleccionadas (fun
 | Rol | Acceso |
 |-----|--------|
 | `admin` | `/admin/*` y productos |
-| `empresa`, `tecnico`, `cliente` | Productos (las pantallas de su rol llegan en el desarrollo del core) |
+| `cliente` | `/cliente/*`: solicitar servicio, seguir el avance de sus casos (línea de tiempo), cancelar y calificar al técnico |
+| `empresa` | `/empresa/*`: panel con indicadores, solicitudes (aceptar, rechazar con motivo, asignar técnico), **ranking mensual de técnicos**, **escalones de bono** y registro de pagos |
+| `tecnico` | Productos (su panel llega en el desarrollo del core) |
 
 | Ruta | Descripción |
 |------|-------------|
@@ -204,11 +206,10 @@ Ver [docs/DEPLOY.md](docs/DEPLOY.md) (Render con Docker, usando el `Dockerfile` 
 
 ## Próximos pasos
 Este módulo deja listos los datos maestros. Lo que sigue del **core**:
-- Casos de reparación (cliente → empresa → técnico) con evidencias y estados.
-- Feedback del cliente y reputación de la empresa.
-- Ranking mensual de técnicos por casos resueltos.
-- Bonos escalonados definidos por la empresa (se paga solo el escalón más alto alcanzado; solo se registra).
-- Paneles de la empresa y del técnico (tarjetas, filtros por fecha, tablas).
+- ✅ Perspectiva del **cliente**: solicitud de servicio con evidencias (fotos), estados, cancelación y feedback (calificación 1–5) que actualiza la reputación de la empresa.
+- ✅ Panel de la **empresa**: aceptar/rechazar y asignar técnico, ranking mensual de técnicos por casos resueltos (desempata la calificación del cliente), escalones de bono definidos por la empresa (se paga solo el escalón más alto alcanzado) y registro del pago por mes cerrado (solo constancia, no mueve dinero).
+- Panel del **técnico**: ver sus casos asignados, avanzar estados (en camino → en reparación → resuelto), subir evidencias y ver su posición en el ranking.
+- Panel de administración con indicadores del core (casos, ranking global).
 
 ## Seguridad
 - Contraseñas con **bcrypt** (`has_secure_password`)

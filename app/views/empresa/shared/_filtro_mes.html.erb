@@ -1,0 +1,6 @@
+<%# Filtro de fecha por mes. Parámetros locales: ruta (URL del GET). %>
+<%= form_with url: ruta, method: :get, class: "filter", data: { controller: "autosubmit" } do %>
+  <%= label_tag :mes, "Mes:" %>
+  <%= select_tag :mes, options_for_select(opciones_de_mes, periodo.strftime("%Y-%m")), data: { action: "change->autosubmit#submit" } %>
+  <noscript><%= submit_tag "Ver", class: "btn btn--sm" %></noscript>
+<% end %>

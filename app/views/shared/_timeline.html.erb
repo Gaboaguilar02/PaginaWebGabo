@@ -1,0 +1,17 @@
+<%# Línea de tiempo del caso. Parámetro local: repair_case. %>
+<% if repair_case.paso_actual %>
+  <ol class="timeline">
+    <% RepairCase::FLUJO.each_with_index do |estado, indice| %>
+      <% clase = indice < repair_case.paso_actual ? "is-done" : (indice == repair_case.paso_actual ? "is-current" : "") %>
+      <li class="timeline__step <%= clase %>">
+        <span class="timeline__dot"><%= indice < repair_case.paso_actual ? "✓" : indice + 1 %></span>
+        <span class="timeline__label"><%= RepairCase::STATUS_LABELS[estado] %></span>
+      </li>
+    <% end %>
+  </ol>
+<% else %>
+  <p class="muted">Esta solicitud fue <strong><%= repair_case.status_label.downcase %></strong> y ya no avanza.</p>
+  <% if repair_case.status == "rechazada" && repair_case.motivo_rechazo.present? %>
+    <p>Motivo: “<%= repair_case.motivo_rechazo %>”</p>
+  <% end %>
+<% end %>

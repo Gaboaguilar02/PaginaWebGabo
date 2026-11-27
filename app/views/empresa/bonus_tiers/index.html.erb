@@ -1,0 +1,65 @@
+<% content_for :title, "Bonos" %>
+
+<div class="page-header">
+  <div>
+    <h1>Escalones de bono</h1>
+    <p class="muted">Define cuántos casos resueltos al mes premia tu empresa y con cuánto dinero.</p>
+  </div>
+  <%= link_to "+ Nuevo escalón", new_empresa_bonus_tier_path, class: "btn btn--primary" %>
+</div>
+
+<div class="card">
+  <h2>¿Cómo funcionan?</h2>
+  <ul class="rules">
+    <li>Cada escalón fija un mínimo de <strong>casos resueltos en el mes</strong> y el monto del bono.</li>
+    <li>A fin de mes, cada técnico recibe <strong>solo el escalón más alto</strong> que alcanzó: los bonos no se acumulan.</li>
+    <li>Un escalón con más casos debe pagar más que los anteriores.</li>
+    <li>UFix <strong>solo registra</strong> el pago como constancia; no mueve dinero.</li>
+  </ul>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr><th>Escalón</th><th>Casos resueltos al mes (mínimo)</th><th>Bono</th><th class="actions-col">Acciones</th></tr>
+    </thead>
+    <tbody>
+      <% @escalones.each do |escalon| %>
+        <tr>
+          <td><%= badge(escalon.nombre, :ok) %></td>
+          <td>desde <strong><%= escalon.casos_minimos %></strong> casos</td>
+          <td><strong><%= number_to_currency(escalon.monto) %></strong></td>
+          <td class="actions">
+            <%= link_to "Editar", edit_empresa_bonus_tier_path(escalon), class: "btn btn--sm" %>
+            <%= button_to "Eliminar", empresa_bonus_tier_path(escalon), method: :delete, class: "btn btn--danger btn--sm",
+                          form: { data: { turbo_confirm: "¿Eliminar el escalón #{escalon.nombre}?" } } %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @escalones.empty? %>
+        <tr><td colspan="4" class="muted">Aún no hay escalones. Crea el primero (por ejemplo: Bronce, 5 casos, $30).</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="card card--flush">
+  <h2 class="card__title">Últimos pagos registrados</h2>
+  <table class="table">
+    <thead><tr><th>Período</th><th>Técnico</th><th>Escalón</th><th>Casos</th><th>Monto</th></tr></thead>
+    <tbody>
+      <% @pagos.each do |pago| %>
+        <tr>
+          <td><%= l pago.periodo, format: "%B %Y" %></td>
+          <td><%= pago.technician.nombre_completo %></td>
+          <td><%= badge(pago.tier_nombre, :ok) %></td>
+          <td><%= pago.casos_resueltos %></td>
+          <td><%= number_to_currency(pago.monto) %></td>
+        </tr>
+      <% end %>
+      <% if @pagos.empty? %>
+        <tr><td colspan="5" class="muted">Todavía no registraste pagos. Se registran desde el <%= link_to "ranking", empresa_ranking_path %> cuando el mes cierra.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

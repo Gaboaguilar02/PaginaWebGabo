@@ -1,0 +1,73 @@
+<% content_for :title, "Solicitar servicio" %>
+
+<div class="page-header">
+  <div>
+    <h1>Solicitar un servicio de reparación</h1>
+    <p class="muted">Cuéntanos qué falla tu electrodoméstico y elige la empresa que irá a tu domicilio.</p>
+  </div>
+</div>
+
+<%= form_with model: @repair_case, url: cliente_repair_cases_path, class: "form card" do |f| %>
+  <%= render "shared/errores", record: @repair_case %>
+
+  <%# La empresa depende del electrodoméstico y de la ciudad; la ciudad depende de la provincia. %>
+  <div data-controller="company-picker" data-company-picker-url-value="<%= cliente_lookups_companies_path %>">
+    <div class="field">
+      <%= f.label :appliance_type_id, "¿Qué electrodoméstico tiene la falla?" %>
+      <%= f.collection_select :appliance_type_id, @appliance_types, :id, :nombre,
+                              { prompt: "Seleccione un electrodoméstico" },
+                              { required: true, data: { company_picker_target: "appliance", action: "change->company-picker#refresh" } } %>
+    </div>
+
+    <div class="grid-2"
+         data-controller="dependent-select"
+         data-dependent-select-url-value="<%= cliente_lookups_cities_path %>"
+         data-dependent-select-query-key-value="province_id">
+      <div class="field">
+        <%= label_tag :province_id, "Provincia" %>
+        <%= select_tag :province_id,
+                       options_from_collection_for_select(@provinces, :id, :nombre, @selected_province_id),
+                       prompt: "Seleccione una provincia", required: true,
+                       data: { dependent_select_target: "parent", action: "change->dependent-select#change change->company-picker#reset" } %>
+      </div>
+
+      <div class="field">
+        <%= f.label :city_id, "Ciudad donde se hará el servicio" %>
+        <%= f.collection_select :city_id, @cities, :id, :nombre,
+                                { prompt: (@selected_province_id.present? ? "Seleccione una ciudad" : "Primero seleccione una provincia") },
+                                { required: true, disabled: @selected_province_id.blank?,
+                                  data: { dependent_select_target: "child", company_picker_target: "city", action: "change->company-picker#refresh" } } %>
+      </div>
+    </div>
+
+    <div class="field">
+      <%= f.label :company_id, "Empresa de servicio técnico" %>
+      <%= f.collection_select :company_id, @companies, :id, :etiqueta_con_reputacion,
+                              { prompt: (@companies.any? ? "Elige una empresa" : "Primero elige electrodoméstico y ciudad") },
+                              { required: true, disabled: @companies.empty?, data: { company_picker_target: "company" } } %>
+      <small class="hint">Solo aparecen empresas activas de tu ciudad que reparan ese electrodoméstico.</small>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :falla, "Describe el problema" %>
+    <%= f.text_area :falla, rows: 4, required: true, minlength: 10, maxlength: 1000,
+                    placeholder: "Ej.: La lavadora no centrifuga y hace un ruido fuerte al empezar el ciclo." %>
+  </div>
+
+  <div class="field">
+    <%= f.label :direccion, "Dirección del servicio" %>
+    <%= f.text_field :direccion, required: true, maxlength: 150, placeholder: "Calle principal, número, referencia" %>
+  </div>
+
+  <div class="field">
+    <%= f.label :evidencias, "Evidencias (fotos del daño, opcional)" %>
+    <%= f.file_field :evidencias, multiple: true, accept: "image/jpeg,image/png,image/webp" %>
+    <small class="hint">Hasta <%= RepairCase::MAX_EVIDENCIAS %> imágenes JPG, PNG o WEBP de máximo 5 MB cada una.</small>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Enviar solicitud", class: "btn btn--primary" %>
+    <%= link_to "Cancelar", cliente_root_path, class: "btn" %>
+  </div>
+<% end %>

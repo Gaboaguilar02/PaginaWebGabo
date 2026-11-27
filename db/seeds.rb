@@ -82,6 +82,102 @@ unless ENV["SEED_DEMO"] == "false"
     usuario.password = password if usuario.new_record?
     usuario.save!
   end
+
+  # Casos de reparación de ejemplo para el cliente demo: uno en cada etapa del flujo,
+  # para recorrer la perspectiva del cliente sin esperar a que empresa y técnico los muevan.
+  cliente = User.find_by!(username: "cliente1")
+  tecnico = User.find_by!(username: "tecnico1")
+  [
+    { falla: "La lavadora no centrifuga y hace un ruido fuerte al empezar el ciclo.", tipo: "Lavadora",
+      status: "en_reparacion", technician: tecnico, creado: 2.days.ago },
+    { falla: "El refrigerador enfría poco y la puerta no sella bien.", tipo: "Refrigerador",
+      status: "resuelta", technician: tecnico, creado: 4.days.ago, resuelta: 2.days.ago },
+    { falla: "La secadora se detiene a mitad del ciclo y huele a quemado.", tipo: "Secadora",
+      status: "solicitada", technician: nil, creado: 3.hours.ago },
+    { falla: "La lavadora pierde agua por la parte inferior.", tipo: "Lavadora",
+      status: "resuelta", technician: tecnico, creado: 20.days.ago, resuelta: 18.days.ago,
+      calificacion: 5, comentario: "Llegó puntual, explicó la falla y la dejó funcionando." }
+  ].each do |datos|
+    caso = RepairCase.find_or_initialize_by(client: cliente, falla: datos[:falla])
+    next unless caso.new_record?
+
+    caso.assign_attributes(
+      company: tecnifrio, city: quito, direccion: "Av. República del Salvador N34-183", appliance_type: ApplianceType.find_by!(nombre: datos[:tipo]),
+      status: datos[:status], technician: datos[:technician], created_at: datos[:creado], resuelta_at: datos[:resuelta],
+      calificacion: datos[:calificacion], comentario_feedback: datos[:comentario], feedback_at: (datos[:resuelta] if datos[:calificacion])
+    )
+    caso.save!
+  end
+  # ---- Datos para el panel de la empresa: más técnicos, historial de casos resueltos, escalones y un pago ----
+  [
+    { username: "tecnico2", nombre_completo: "Carlos Mena", cedula: "0200000016", role: "tecnico", company: tecnifrio },
+    { username: "tecnico3", nombre_completo: "Lucía Vera", cedula: "0300000015", role: "tecnico", company: tecnifrio },
+    { username: "cliente2", nombre_completo: "Luis Andrade", cedula: "1712345683", role: "cliente", company: nil },
+    { username: "cliente3", nombre_completo: "Sofía Paredes", cedula: "1723456784", role: "cliente", company: nil }
+  ].each do |datos|
+    usuario = User.find_or_initialize_by(username: datos[:username])
+    usuario.assign_attributes(datos.merge(activo: true))
+    usuario.password = password if usuario.new_record?
+    usuario.save!
+  end
+
+  tecnico1 = tecnico
+  tecnico2 = User.find_by!(username: "tecnico2")
+  tecnico3 = User.find_by!(username: "tecnico3")
+  clientes = [ User.find_by!(username: "cliente2"), User.find_by!(username: "cliente3") ]
+  equipos = ApplianceType.where(nombre: [ "Lavadora", "Refrigerador", "Secadora" ]).order(:nombre).to_a
+
+  # Escalones de bono de TecniFrío (con más casos, más dinero; se paga solo el más alto alcanzado).
+  [ [ "Bronce", 5, 30 ], [ "Plata", 10, 60 ], [ "Oro", 15, 100 ] ].each do |nombre, casos, monto|
+    BonusTier.find_or_create_by!(company: tecnifrio, casos_minimos: casos) { |escalon| escalon.assign_attributes(nombre: nombre, monto: monto) }
+  end
+
+  # Casos resueltos de ejemplo: mes anterior (cerrado, para registrar pagos) y mes actual (en curso).
+  mes_actual = Date.current.beginning_of_month.in_time_zone
+  mes_anterior = (Date.current.beginning_of_month - 1.month).in_time_zone
+  notas = [ 5, 5, 4, 5, 4, 5, 3, 5, 4, 5, 5, 4 ]
+  historial = [
+    [ tecnico1, mes_anterior, 12, "anterior" ], [ tecnico2, mes_anterior, 7, "anterior" ], [ tecnico3, mes_anterior, 4, "anterior" ],
+    [ tecnico2, mes_actual, 5, "actual" ], [ tecnico1, mes_actual, 3, "actual" ], [ tecnico3, mes_actual, 2, "actual" ]
+  ]
+  historial.each do |tecnico, mes, cantidad, etiqueta|
+    cantidad.times do |i|
+      falla = "[demo] Reparación #{i + 1} de #{tecnico.nombre_completo} (mes #{etiqueta})"
+      caso = RepairCase.find_or_initialize_by(client: clientes[i % 2], falla: falla)
+      next unless caso.new_record?
+
+      resuelta = mes + (i + 1).days + 9.hours
+      resuelta = Time.current - 1.hour if resuelta > Time.current
+      caso.assign_attributes(
+        company: tecnifrio, city: quito, direccion: "Av. 6 de Diciembre N31-120", appliance_type: equipos[i % equipos.size],
+        status: "resuelta", technician: tecnico, created_at: resuelta - 1.day, resuelta_at: resuelta,
+        calificacion: notas[(i + tecnico.id) % notas.size], feedback_at: resuelta + 3.hours,
+        comentario_feedback: [ "Muy buen servicio", "Puntual y amable", "Resolvió el problema", nil ][i % 4]
+      )
+      caso.save!
+    end
+  end
+
+  # Solicitudes que esperan acción de la empresa: una por aceptar y una aceptada por asignar.
+  [
+    { cliente: clientes[0], falla: "El refrigerador hace ruido y no enfría la parte de abajo.", tipo: "Refrigerador", status: "solicitada", creado: 1.hour.ago },
+    { cliente: clientes[1], falla: "La lavadora no desagua al terminar el lavado.", tipo: "Lavadora", status: "aceptada", creado: 5.hours.ago }
+  ].each do |datos|
+    caso = RepairCase.find_or_initialize_by(client: datos[:cliente], falla: datos[:falla])
+    next unless caso.new_record?
+
+    caso.assign_attributes(company: tecnifrio, city: quito, direccion: "Calle Mariana de Jesús y Pradera", appliance_type: ApplianceType.find_by!(nombre: datos[:tipo]),
+                           status: datos[:status], created_at: datos[:creado])
+    caso.save!
+  end
+
+  # Un pago ya registrado del mes anterior (Plata para Juan); el de Carlos (Bronce) queda pendiente para mostrar cómo se registra.
+  if BonusPayment.where(company: tecnifrio, technician: tecnico1, periodo: mes_anterior.to_date).none?
+    BonusPayment.registrar(company: tecnifrio, technician: tecnico1, periodo: mes_anterior.to_date, por: User.find_by!(username: "empresa1"),
+                           nota: "Pagado con la nómina del mes")
+  end
+
+  tecnifrio.recalcular_reputacion!
 end
 
 puts "Seeds listos: #{Province.count} provincias, #{City.count} ciudades, #{ApplianceType.count} electrodomésticos, " \

@@ -1,0 +1,92 @@
+<% content_for :title, "Panel de la empresa" %>
+
+<div class="page-header">
+  <div>
+    <h1><%= @company.nombre %></h1>
+    <p class="muted">Panel de la empresa · desempeño de tus técnicos en <strong><%= l periodo, format: "%B %Y" %></strong></p>
+  </div>
+  <%= render "empresa/shared/filtro_mes", ruta: empresa_root_path %>
+</div>
+
+<% unless @company.activa? %>
+  <div class="flash flash--error">
+    Tu empresa está <strong><%= @company.status_label.downcase %></strong>: mientras no esté activa no aparece para los clientes ni recibe solicitudes. Contacta al administrador.
+  </div>
+<% end %>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat__label">Por aceptar</span>
+    <span class="stat__value"><%= @por_aceptar %></span>
+    <span class="stat__hint"><%= link_to "Revisar solicitudes", empresa_repair_cases_path(filtro: "por_aceptar") %></span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Por asignar técnico</span>
+    <span class="stat__value"><%= @por_asignar %></span>
+    <span class="stat__hint"><%= link_to "Asignar ahora", empresa_repair_cases_path(filtro: "por_asignar") %></span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">En curso</span>
+    <span class="stat__value"><%= @en_curso %></span>
+    <span class="stat__hint">Técnicos atendiendo</span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Resueltos en el mes</span>
+    <span class="stat__value"><%= @resueltas_mes %></span>
+    <span class="stat__hint"><%= @recibidas_mes %> solicitudes recibidas</span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Calificación del mes</span>
+    <span class="stat__value"><%= @promedio_mes ? "#{@promedio_mes} ★" : "—" %></span>
+    <span class="stat__hint">Promedio de tus clientes</span>
+  </div>
+  <div class="stat">
+    <span class="stat__label"><%= @ranking.cerrado? ? "Bonos del mes" : "Bonos proyectados" %></span>
+    <span class="stat__value"><%= number_to_currency(@ranking.total_bonos) %></span>
+    <span class="stat__hint"><%= link_to "Ver ranking y bonos", empresa_ranking_path(mes: periodo.strftime("%Y-%m")) %></span>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card card--flush">
+    <h2 class="card__title">Mejores técnicos del mes</h2>
+    <table class="table">
+      <thead><tr><th>#</th><th>Técnico</th><th>Resueltos</th><th>Calif.</th><th>Escalón</th></tr></thead>
+      <tbody>
+        <% @top.each do |fila| %>
+          <tr>
+            <td><%= posicion(fila.posicion) %></td>
+            <td><%= fila.technician.nombre_completo %></td>
+            <td><strong><%= fila.resueltos %></strong></td>
+            <td><%= fila.promedio ? "#{fila.promedio} ★" : "—" %></td>
+            <td><%= fila.tier ? badge(fila.tier.nombre, :ok) : badge("Sin escalón", :neutral) %></td>
+          </tr>
+        <% end %>
+        <% if @top.empty? %>
+          <tr><td colspan="5" class="muted">Aún no tienes técnicos activos.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+    <p class="card__foot"><%= link_to "Ver ranking completo →", empresa_ranking_path(mes: periodo.strftime("%Y-%m")) %></p>
+  </div>
+
+  <div class="card card--flush">
+    <h2 class="card__title">Solicitudes que esperan tu acción</h2>
+    <table class="table">
+      <thead><tr><th>N.º</th><th>Equipo</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        <% @pendientes.each do |caso| %>
+          <tr>
+            <td><%= link_to "##{caso.id}", empresa_repair_case_path(caso) %></td>
+            <td><%= caso.appliance_type.nombre %></td>
+            <td><%= badge_estado_caso(caso) %></td>
+            <td class="actions"><%= link_to(caso.status == "solicitada" ? "Revisar" : "Asignar", empresa_repair_case_path(caso), class: "btn btn--sm") %></td>
+          </tr>
+        <% end %>
+        <% if @pendientes.empty? %>
+          <tr><td colspan="4" class="muted">No hay solicitudes pendientes. ¡Todo al día!</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

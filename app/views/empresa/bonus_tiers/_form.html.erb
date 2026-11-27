@@ -1,0 +1,24 @@
+<%= form_with model: [ :empresa, tier ], class: "form card" do |f| %>
+  <%= render "shared/errores", record: tier %>
+
+  <div class="field">
+    <%= f.label :nombre, "Nombre del escalón" %>
+    <%= f.text_field :nombre, required: true, maxlength: 40, placeholder: "Bronce, Plata, Oro..." %>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <%= f.label :casos_minimos, "Casos resueltos al mes (mínimo)" %>
+      <%= f.number_field :casos_minimos, required: true, min: 1, max: 500, step: 1 %>
+    </div>
+    <div class="field">
+      <%= f.label :monto, "Bono (USD)" %>
+      <%= f.number_field :monto, required: true, min: 0.01, step: 0.01 %>
+    </div>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Guardar escalón", class: "btn btn--primary" %>
+    <%= link_to "Cancelar", empresa_bonus_tiers_path, class: "btn" %>
+  </div>
+<% end %>

@@ -41,3 +41,21 @@ inactivo:
   role: cliente
   activo: false
   password_digest: <%= password_digest %>
+
+tecnico_carlos:
+  username: carlos.mena
+  nombre_completo: Carlos Mena
+  cedula: "0200000016"
+  role: tecnico
+  activo: true
+  company: tecnifrio
+  password_digest: <%= password_digest %>
+
+empresa_hogarfix:
+  username: empresa2
+  nombre_completo: Rosa León
+  cedula: "0300000015"
+  role: empresa
+  activo: true
+  company: hogarfix
+  password_digest: <%= password_digest %>

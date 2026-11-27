@@ -1,0 +1,122 @@
+es:
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      short: "%d %b"
+      long: "%d de %B de %Y"
+    day_names: [domingo, lunes, martes, miércoles, jueves, viernes, sábado]
+    abbr_day_names: [dom, lun, mar, mié, jue, vie, sáb]
+    month_names: [~, enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre, diciembre]
+    abbr_month_names: [~, ene, feb, mar, abr, may, jun, jul, ago, sep, oct, nov, dic]
+    order: [day, month, year]
+  time:
+    formats:
+      default: "%d/%m/%Y %H:%M"
+      short: "%d %b %H:%M"
+      long: "%d de %B de %Y %H:%M"
+    am: am
+    pm: pm
+  number:
+    format:
+      separator: ","
+      delimiter: "."
+      precision: 2
+    currency:
+      format:
+        unit: "$"
+        format: "%u%n"
+        separator: ","
+        delimiter: "."
+        precision: 2
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      accepted: debe ser aceptado
+      blank: no puede estar en blanco
+      present: debe estar en blanco
+      confirmation: no coincide con %{attribute}
+      empty: no puede estar vacío
+      equal_to: debe ser igual a %{count}
+      even: debe ser par
+      exclusion: está reservado
+      greater_than: debe ser mayor que %{count}
+      greater_than_or_equal_to: debe ser mayor o igual que %{count}
+      inclusion: no está incluido en la lista
+      invalid: no es válido
+      less_than: debe ser menor que %{count}
+      less_than_or_equal_to: debe ser menor o igual que %{count}
+      model_invalid: "La validación falló: %{errors}"
+      not_a_number: no es un número
+      not_an_integer: debe ser un entero
+      odd: debe ser impar
+      required: debe existir
+      taken: ya está en uso
+      too_long:
+        one: es demasiado largo (máximo 1 carácter)
+        other: es demasiado largo (máximo %{count} caracteres)
+      too_short:
+        one: es demasiado corto (mínimo 1 carácter)
+        other: es demasiado corto (mínimo %{count} caracteres)
+      wrong_length:
+        one: no tiene la longitud correcta (debe tener 1 carácter)
+        other: no tiene la longitud correcta (debe tener %{count} caracteres)
+      other_than: debe ser distinto de %{count}
+  activerecord:
+    errors:
+      messages:
+        required: debe existir
+        record_invalid: "La validación falló: %{errors}"
+        restrict_dependent_destroy:
+          has_one: "No se puede eliminar el registro porque existe un %{record} dependiente"
+          has_many: "No se puede eliminar porque tiene %{record} asociados"
+    models:
+      user: Usuario
+      company: Empresa
+      repair_case: Solicitud
+      bonus_tier: Escalón de bono
+      bonus_payment: Pago de bono
+    attributes:
+      user:
+        username: Usuario
+        password: Contraseña
+        nombre_completo: Nombre completo
+        cedula: Cédula
+        role: Rol
+        company_id: Empresa
+        company: Empresa
+      company:
+        nombre: Nombre
+        ruc: RUC
+        descripcion: Descripción
+        telefono: Teléfono
+        direccion: Dirección
+        city: Ciudad
+        status: Estado
+      appliance_type:
+        nombre: Nombre
+      city:
+        nombre: Nombre
+        province: Provincia
+      province:
+        nombre: Nombre
+      repair_case:
+        falla: Descripción del problema
+        direccion: Dirección
+        evidencias: Evidencias
+        company: Empresa
+        client: Cliente
+        technician: Técnico
+        appliance_type: Electrodoméstico
+        city: Ciudad
+        calificacion: Calificación
+        comentario_feedback: Comentario
+        motivo_rechazo: Motivo
+      bonus_tier:
+        nombre: Nombre
+        casos_minimos: Casos mínimos
+        monto: Monto
+      bonus_payment:
+        technician: Técnico
+        periodo: Período
+        monto: Monto
+        nota: Nota

@@ -81,7 +81,13 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "elimina a otro usuario" do
-    assert_difference("User.count", -1) { delete admin_user_path(users(:inactivo)) }
+    assert_difference("User.count", -1) { delete admin_user_path(users(:empresa)) }
+  end
+
+  test "no elimina a un usuario que ya tiene casos de reparación" do
+    assert_no_difference("User.count") { delete admin_user_path(users(:inactivo)) }
+    assert_redirected_to admin_users_path
+    assert flash[:alert].present?
   end
 
   test "filtra el listado por rol" do

@@ -7,6 +7,9 @@ class Company < ApplicationRecord
   has_many :company_appliance_types, dependent: :destroy
   has_many :appliance_types, through: :company_appliance_types
   has_many :users, dependent: :restrict_with_error
+  has_many :repair_cases, dependent: :restrict_with_error
+  has_many :bonus_payments, dependent: :restrict_with_error
+  has_many :bonus_tiers, dependent: :destroy
 
   before_validation :normalizar_campos
 
@@ -27,6 +30,25 @@ class Company < ApplicationRecord
 
   def status_label
     STATUS_LABELS.fetch(status, status)
+  end
+
+  # Empresas que pueden atender un servicio: activas, de esa ciudad y que reparan ese electrodoméstico.
+  def self.disponibles_para(city_id:, appliance_type_id:)
+    return none if city_id.blank? || appliance_type_id.blank?
+
+    activas.where(city_id: city_id)
+           .where(id: CompanyApplianceType.where(appliance_type_id: appliance_type_id).select(:company_id))
+           .order(:nombre)
+  end
+
+  def etiqueta_con_reputacion
+    reviews_count.zero? ? "#{nombre} · sin calificaciones" : "#{nombre} · ★ #{rating_promedio} (#{reviews_count})"
+  end
+
+  # Reputación de la empresa = promedio de las calificaciones que dieron los clientes.
+  def recalcular_reputacion!
+    calificados = repair_cases.where.not(calificacion: nil)
+    update_columns(rating_promedio: (calificados.average(:calificacion) || 0).round(2), reviews_count: calificados.count)
   end
 
   private

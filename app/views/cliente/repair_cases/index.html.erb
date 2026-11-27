@@ -1,0 +1,79 @@
+<% content_for :title, "Mis solicitudes" %>
+
+<div class="page-header">
+  <div>
+    <h1>Mis solicitudes de servicio</h1>
+    <p class="muted">Pide la reparación de un electrodoméstico y sigue su avance hasta que se resuelva.</p>
+  </div>
+  <%= link_to "+ Solicitar servicio", new_cliente_repair_case_path, class: "btn btn--primary" %>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat__label">Solicitudes</span>
+    <span class="stat__value"><%= @total %></span>
+    <span class="stat__hint">Historial completo</span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">En curso</span>
+    <span class="stat__value"><%= @en_curso %></span>
+    <span class="stat__hint"><%= link_to "Ver en curso", cliente_repair_cases_path(filtro: "activos") %></span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Resueltas</span>
+    <span class="stat__value"><%= @resueltos %></span>
+    <span class="stat__hint"><%= link_to "Ver resueltas", cliente_repair_cases_path(filtro: "resueltos") %></span>
+  </div>
+  <div class="stat">
+    <span class="stat__label">Por calificar</span>
+    <span class="stat__value"><%= @por_calificar %></span>
+    <span class="stat__hint">Tu opinión mide el desempeño del técnico</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <%= link_to "Todas", cliente_repair_cases_path, class: [ "tabs__item", ("is-active" if @filtro.nil?) ] %>
+  <% Cliente::RepairCasesController::FILTROS.each do |clave, texto| %>
+    <%= link_to texto, cliente_repair_cases_path(filtro: clave), class: [ "tabs__item", ("is-active" if @filtro == clave) ] %>
+  <% end %>
+</div>
+
+<div class="card card--flush">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>N.º</th>
+        <th>Electrodoméstico</th>
+        <th>Empresa</th>
+        <th>Técnico</th>
+        <th>Estado</th>
+        <th>Fecha</th>
+        <th class="actions-col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @repair_cases.each do |caso| %>
+        <tr>
+          <td><%= link_to "##{caso.id}", cliente_repair_case_path(caso) %></td>
+          <td><%= caso.appliance_type.nombre %></td>
+          <td><%= caso.company.nombre %></td>
+          <td><%= caso.technician&.nombre_completo || "—" %></td>
+          <td><%= badge_estado_caso(caso) %></td>
+          <td><%= l caso.created_at.to_date, format: :short %></td>
+          <td class="actions">
+            <% if caso.puede_calificar? %>
+              <%= link_to "Calificar", cliente_repair_case_path(caso, anchor: "feedback"), class: "btn btn--primary btn--sm" %>
+            <% end %>
+            <%= link_to "Ver detalle", cliente_repair_case_path(caso), class: "btn btn--sm" %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @repair_cases.empty? %>
+        <tr><td colspan="7" class="muted">
+          <%= @filtro ? "No tienes solicitudes en esta categoría." : "Aún no has solicitado ningún servicio." %>
+          <%= link_to "Solicitar el primero", new_cliente_repair_case_path %>
+        </td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

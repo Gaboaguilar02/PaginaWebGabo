@@ -22,6 +22,10 @@ module PaginaWebGabo
     # in config/environments, which are processed later.
     #
     config.time_zone = "Quito"
+    # La aplicación está en español (mensajes de validación, fechas y meses): ver config/locales/es.yml
+    config.i18n.available_locales = %i[ es en ]
+    config.i18n.default_locale = :es
+    config.i18n.fallbacks = [ :en ]
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

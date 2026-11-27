@@ -1,0 +1,47 @@
+solicitada:
+  client: cliente
+  company: tecnifrio
+  appliance_type: lavadora
+  city: quito
+  falla: La lavadora no centrifuga y hace ruido fuerte.
+  direccion: Av. República del Salvador N34-183
+  status: solicitada
+
+en_reparacion:
+  client: cliente
+  company: tecnifrio
+  technician: tecnico
+  appliance_type: refrigerador
+  city: quito
+  falla: El refrigerador enfría poco y la puerta no sella.
+  direccion: Av. República del Salvador N34-183
+  status: en_reparacion
+
+resuelta_sin_calificar:
+  client: cliente
+  company: tecnifrio
+  technician: tecnico
+  appliance_type: secadora
+  city: quito
+  falla: La secadora se detiene a mitad del ciclo.
+  direccion: Av. República del Salvador N34-183
+  status: resuelta
+  resuelta_at: <%= 5.months.ago.to_fs(:db) %>
+
+ajena:
+  client: inactivo
+  company: tecnifrio
+  appliance_type: lavadora
+  city: quito
+  falla: Caso que pertenece a otro cliente.
+  direccion: Calle Falsa 123
+  status: solicitada
+
+de_otra_empresa:
+  client: inactivo
+  company: hogarfix
+  appliance_type: lavadora
+  city: guayaquil
+  falla: Caso que pertenece a otra empresa distinta.
+  direccion: Calle Falsa 456
+  status: solicitada

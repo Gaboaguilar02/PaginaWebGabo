@@ -1,6 +1,6 @@
 <header class="topbar">
   <div class="topbar__inner">
-    <%= link_to "PaginaWebGabo", (current_user.admin? ? admin_root_path : root_path), class: "brand" %>
+    <%= link_to "UFix", (current_user.admin? ? admin_root_path : (current_user.cliente? ? cliente_root_path : (current_user.empresa? ? empresa_root_path : root_path))), class: "brand" %>
 
     <nav class="topnav">
       <% if current_user.admin? %>
@@ -11,7 +11,18 @@
         <%= nav_link "Provincias", admin_provinces_path %>
         <%= nav_link "Ciudades", admin_cities_path %>
       <% end %>
-      <%= nav_link "Productos", products_path %>
+      <% if current_user.cliente? %>
+        <%= nav_link "Mis solicitudes", cliente_root_path, activo: request.path != new_cliente_repair_case_path %>
+        <%= nav_link "Solicitar servicio", new_cliente_repair_case_path %>
+      <% elsif current_user.empresa? %>
+        <%= nav_link "Panel", empresa_root_path %>
+        <%= nav_link "Solicitudes", empresa_repair_cases_path %>
+        <%= nav_link "Ranking", empresa_ranking_path %>
+        <%= nav_link "Bonos", empresa_bonus_tiers_path %>
+        <%= nav_link "Pagos", empresa_bonus_payments_path %>
+      <% else %>
+        <%= nav_link "Productos", products_path %>
+      <% end %>
     </nav>
 
     <div class="topbar__user">

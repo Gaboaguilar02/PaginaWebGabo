@@ -11,8 +11,13 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_root_url
   end
 
-  test "un cliente entra a la sección de productos" do
+  test "un cliente entra a sus solicitudes de servicio" do
     login_as users(:cliente)
+    assert_redirected_to cliente_root_url
+  end
+
+  test "una empresa o un técnico entran a la sección de productos" do
+    login_as users(:tecnico)
     assert_redirected_to products_url
   end
 

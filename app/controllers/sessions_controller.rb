@@ -25,6 +25,6 @@ class SessionsController < ApplicationController
   private
 
   def inicio_para(user)
-    user.admin? ? admin_root_path : products_path
+    user.admin? ? admin_root_path : (user.cliente? ? cliente_root_path : (user.empresa? ? empresa_root_path : products_path))
   end
 end
